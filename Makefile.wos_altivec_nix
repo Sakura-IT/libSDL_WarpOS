@@ -1,0 +1,51 @@
+# Makefile for gcc version of SDL
+		  
+CC := gcc 
+AS := as
+LD := ld
+RL := ranlib
+
+DEFINES= DEFINE=ENABLE_CYBERGRAPHICS DEFINE=inline=__inline  DEFINE=NO_SIGNAL_H DEFINE=HAVE_STDIO_H DEFINE=ENABLE_AHI
+
+# DEFINE=HAVE_OPENGL
+INCLUDES= IDIR=./include/SDL
+#-I$(PREF)/m68k-unknown-amigaos/include -I$(PREF)/env/m68k-unknown-amigaos/sys-include
+CFLAGS = --specs=warpnix -maltivec -I. -I../include -I./include/ -I./include/SDL -O2 -fomit-frame-pointer -DNO_AMIGADEBUG
+#DEBUG=FULL VERBOSE
+
+GLFLAGS = -DSHARED_LIB -DNO_AMIGADEBUG -lm
+
+GCCDEFINES = -DWARPOS -DENABLE_CYBERGRAPHICS -DNO_SIGNAL_H -D__MEM_AMIGA -DENABLE_AHI -DSDL_ALTIVEC_COPY -DSDL_ALTIVEC_BLITTERS
+#-DNO_INLINE_STDARG
+  
+
+GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wave.go audio/amigaos/SDL_ahiaudio.go \
+	main/SDL_error.go main/SDL_fatal.go video/SDL_RLEaccel.go video/SDL_blit.go video/SDL_blit_0.go \
+	video/SDL_blit_1.go video/SDL_blit_A.go video/SDL_blit_N.go \
+	video/SDL_bmp.go video/SDL_cursor.go video/SDL_pixels.go video/SDL_surface.go video/SDL_stretch.go \
+	video/SDL_yuv.go video/SDL_yuv_sw.go video/SDL_video.go cpuinfo/SDL_cpuinfo.go \
+	timer/amigaos/SDL_systimer.go timer/SDL_timer.go joystick/SDL_joystick.go video/amigaos/SDL_cgxasm.go \
+	joystick/amiga/SDL_sysjoystick.go cdrom/SDL_cdrom.go cdrom/amiga/SDL_syscdrom.go events/SDL_quit.go events/SDL_active.go \
+	events/SDL_keyboard.go events/SDL_mouse.go events/SDL_resize.go file/SDL_rwops.go main/SDL.go \
+	events/SDL_events.go thread/amigaos/SDL_sysmutex.go thread/amigaos/SDL_syssem.go thread/amigaos/SDL_systhread.go thread/amigaos/SDL_thread.go \
+	thread/amigaos/SDL_syscond.go video/amigaos/SDL_cgxvideo.go video/amigaos/SDL_cgxmodes.go video/amigaos/SDL_cgximage.go video/amigaos/SDL_amigaevents.go \
+	video/amigaos/SDL_amigamouse.go video/amigaos/SDL_cgxgl.go video/amigaos/SDL_cgxwm.go \
+	video/amigaos/SDL_cgxyuv.go video/amigaos/SDL_cgxaccel.go video/amigaos/SDL_cgxgl_wrapper.go \
+	video/SDL_gamma.go stdlib/SDL_stdlib.go stdlib/SDL_string.go stdlib/SDL_malloc.go stdlib/SDL_getenv.go
+
+
+%.go: %.c
+	$(CC) $(CFLAGS) $(GCCDEFINES) -o $@ -c $*.c
+
+%.ll: %.s
+	$(AS) -o $@ $*.s
+
+all: libSDL_wos.a
+
+libSDL_wos.a: $(GOBJS)
+	-rm -f libSDL_wos.a
+	ar cru libSDL_wos.a $(GOBJS)
+	$(RL) libSDL_wos.a
+
+clean:
+	-rm -f $(GOBJS)
