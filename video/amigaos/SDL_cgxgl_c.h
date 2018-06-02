@@ -30,11 +30,6 @@ static char rcsid =
 #include "../SDL_sysvideo.h"
 #define _THIS   SDL_VideoDevice *_this
 
-#ifdef SDL_VIDEO_OPENGL
-#include <GL/Amigamesa.h>
-extern void *AmiGetGLProc(const char *proc);
-#endif /* HAVE_OPENGL */
-
 struct SDL_PrivateGLData {
 	int gl_active;
 };
