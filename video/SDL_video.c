@@ -41,6 +41,8 @@ static VideoBootStrap *bootstrap[] = {
 	&CGX_bootstrap,
 #endif
 
+#define	GL_STENCIL_TEST                  0x0B90
+
 #if SDL_VIDEO_DRIVER_DUMMY
 	&DUMMY_bootstrap,
 #endif
@@ -1559,9 +1561,9 @@ void SDL_GL_Lock()
 	{
 		SDL_VideoDevice *this = current_video;
 
-		this->glPushAttrib( GL_ALL_ATTRIB_BITS );	/* TODO: narrow range of what is saved */
+//		this->glPushAttrib( GL_ALL_ATTRIB_BITS );	/* TODO: narrow range of what is saved */
 #ifdef GL_CLIENT_PIXEL_STORE_BIT
-		this->glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT );
+//		this->glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT );
 #endif
 
 		this->glEnable(GL_TEXTURE_2D);
@@ -1611,8 +1613,8 @@ void SDL_GL_Unlock()
 		this->glMatrixMode(GL_PROJECTION);
 		this->glPopMatrix();
 
-		this->glPopClientAttrib();
-		this->glPopAttrib();
+//		this->glPopClientAttrib();
+//		this->glPopAttrib();
 	}
 #endif
 }

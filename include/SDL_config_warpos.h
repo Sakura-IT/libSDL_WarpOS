@@ -148,7 +148,7 @@
 
 //#define SDL_VIDEO_OPENGL	1 
 
-#undef SDL_VIDEO_OPENGL
+//#undef SDL_VIDEO_OPENGL
 
 //#define SDL_AUDIO_DISABLED 0
 
