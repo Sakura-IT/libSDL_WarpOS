@@ -21,7 +21,7 @@ GCCDEFINES = -DWARPOS -DENABLE_CYBERGRAPHICS -DNO_SIGNAL_H -D__MEM_AMIGA -DENABL
 
 GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wave.go audio/amigaos/SDL_ahiaudio.go \
 	main/SDL_error.go main/SDL_fatal.go video/SDL_RLEaccel.go video/SDL_blit.go video/SDL_blit_0.go \
-	video/SDL_blit_1.go video/SDL_blit_A.go video/SDL_blit_N.go video/amigaos/SDL_cgxgl_wrapper.go\
+	video/SDL_blit_1.go video/SDL_blit_A.go video/SDL_blit_N.go \
 	video/SDL_bmp.go video/SDL_cursor.go video/SDL_pixels.go video/SDL_surface.go video/SDL_stretch.go \
 	video/SDL_yuv.go video/SDL_yuv_sw.go video/SDL_video.go cpuinfo/SDL_cpuinfo.go \
 	timer/amigaos/SDL_systimer.go timer/SDL_timer.go joystick/SDL_joystick.go video/amigaos/SDL_cgxasm.go \
