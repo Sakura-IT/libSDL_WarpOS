@@ -1,4 +1,7 @@
 History:
+SDL1.2.14WOSb
+
+Added minigl on top of SDL. Needs custom minigl with mglAttachContext, mglDetachContext, MGLMiniTerm.
 
 SDL1.2.14WOS
 
