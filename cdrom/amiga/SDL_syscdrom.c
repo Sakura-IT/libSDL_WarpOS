@@ -49,8 +49,6 @@ static char rcsid =
 #define	SCSI_SENSE_SIZE	252
 #define MAX_DRIVES 32
 
-UBYTE *CDList[MAX_DRIVES];
-
 struct MyCDROM
 {
 	char	dosname[20];
@@ -64,7 +62,10 @@ struct MyCDROM
 	struct SCSICmd		scsicmd;
 	UWORD	*inbuf;
 	UBYTE	*sensebuf;
+	struct MsgPort	*port;
 };
+
+struct MyCDROM *CDList[MAX_DRIVES];
 
 struct TrackInfo
 {
@@ -80,13 +81,15 @@ struct CD_TOC
 	struct TrackInfo	TOCData[100];
 };
 
+
+
 /**********************************************************************
 	FindDup
 
 	Return 1 if duplicate
 **********************************************************************/
 
-static ULONG FindDup(UBYTE **cdlist, CONST_STRPTR devname, ULONG unit)
+static ULONG FindDup(struct MyCDROM **cdlist, CONST_STRPTR devname, ULONG unit)
 {
 	struct MyCDROM	*entry;
 	ULONG	i;
@@ -128,14 +131,46 @@ static LONG SendCMD(SDL_CD *cdrom, const UBYTE *cmd, int cmdlen)
 	return (entry->scsicmd.scsi_Status ? -1 : 0);
 }
 
+
+static int CDLength(SDL_CD *cdrom)
+{
+	static const UBYTE	Cmd[10]	=	{ 0x25, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	LONG	statcode;
+	statcode=SendCMD(cdrom, Cmd, sizeof(Cmd));
+
+	if (statcode == 0)
+	{
+		struct MyCDROM	*entry	= CDList[cdrom->id];
+		UBYTE	*buf;
+		int	length, size;
+		UBYTE	byte1,byte2,byte3,byte4;
+
+		buf	= (UBYTE *)entry->inbuf;
+
+		byte1 = buf[0]; byte2 = buf[1]; byte3 = buf[2]; byte4 = buf[3];
+		length = (byte1<<24) + (byte2<<16) + (byte3<<8) + byte4;
+
+		byte1 = buf[4]; byte2 = buf[5]; byte3 = buf[6]; byte4 = buf[7];
+		size =  (byte1<<24) + (byte2<<16) + (byte3 <<8) + byte4;
+
+		return(length);
+
+	} else {
+		return(-1);
+	}
+}
+
+
 static const char *SDL_SYS_CDName(int drive)
 {
-	return(CDList[drive]);
+	return(CDList[drive]->dosname);
 }
 
 static void SDL_DisposeCD(struct MyCDROM *entry)
 {
 	DeleteIORequest((struct IORequest *)entry->req);
+
+	DeleteMsgPort((struct MsgPort *)entry->port);
 
 	if (entry->inbuf)
 		FreeVecPPC(entry->inbuf);
@@ -156,21 +191,29 @@ static int SDL_SYS_CDOpen(int drive)
 	/* Yay! Use DOS message port :-) */
 
 	entry	= CDList[drive];
-	port	= &((struct Process *)FindTask(NULL))->pr_MsgPort;
+	port	= CreateMsgPort();
+	if(port==NULL) {
+		return -1;
+	} 
+
+	entry->port = port;
 
 	if ((entry->req = CreateIORequest(port, sizeof(struct IOStdReq))) != NULL)
 	{
 		if ((entry->inbuf		= AllocVecPPC(SCSI_INBUF_SIZE, 0L, 0L)) != NULL)
-		if ((entry->sensebuf	= AllocVecPPC(SCSI_SENSE_SIZE, 0L, 0L)) != NULL)
-		if (OpenDevice(entry->devname, entry->unit, (struct IORequest *)entry->req, entry->unitflags) == 0)
 		{
-			entry->req->io_Command	= HD_SCSICMD;
-			entry->req->io_Data		= (APTR)&entry->scsicmd;
-			entry->req->io_Length	= sizeof(struct SCSICmd);
+			if ((entry->sensebuf	= AllocVecPPC(SCSI_SENSE_SIZE, 0L, 0L)) != NULL)
+			{
+				if (OpenDevice(entry->devname, entry->unit, (struct IORequest *)entry->req, entry->unitflags) == 0)
+					{
+						entry->req->io_Command	= HD_SCSICMD;
+						entry->req->io_Data		= (APTR)&entry->scsicmd;
+						entry->req->io_Length	= sizeof(struct SCSICmd);
 
-			return drive;
+						return drive;
+					}
+			}
 		}
-
 		SDL_DisposeCD(entry);
 	}
 
@@ -180,7 +223,6 @@ static int SDL_SYS_CDOpen(int drive)
 static void SDL_SYS_CDClose(SDL_CD *cdrom)
 {
 	struct MyCDROM	*entry	= CDList[cdrom->id];
-
 	if (entry && entry->req)
 	{
 		CloseDevice((struct IORequest *)entry->req);
@@ -193,19 +235,18 @@ static int SDL_SYS_CDGetTOC(SDL_CD *cdrom)
 	static const UBYTE	Cmd[10] =
 		{ 0x43, 0, 0, 0, 0, 0, 0, TOC_SIZE >> 8, TOC_SIZE & 0xff, 0 };
 	int	okay;
-
 	okay	= 0;
 
 	if (SendCMD(cdrom, Cmd, sizeof(Cmd)) == 0)
 	{
 		struct MyCDROM	*entry	= CDList[cdrom->id];
 		struct CD_TOC	*toc;
-		int	i;
+		int	i,CDlen;
 
 		toc	= (struct CD_TOC *)entry->inbuf;
-
-		cdrom->numtracks = toc->LastTrack - toc->FirstTrack;
-
+	
+		cdrom->numtracks = toc->LastTrack - toc->FirstTrack +1;
+		
 		if ( cdrom->numtracks > SDL_MAX_TRACKS ) {
 			cdrom->numtracks = SDL_MAX_TRACKS;
 		}
@@ -219,15 +260,22 @@ static int SDL_SYS_CDGetTOC(SDL_CD *cdrom)
 			cdrom->track[i].id = i+1;
 
 			if (toc->TOCData[i].Flags & 4)
-				cdrom->track[i].type	= SDL_AUDIO_TRACK;
-			else
+			{
 				cdrom->track[i].type	= SDL_DATA_TRACK;
+			} else {
+				cdrom->track[i].type	= SDL_AUDIO_TRACK;
+			}
 
 			cdrom->track[i].offset		= toc->TOCData[i].Address;
-
-			if (i == cdrom->numtracks)
+		
+			if (i == cdrom->numtracks-1)
 			{
-				cdrom->track[i].length	= 0;
+				CDlen = CDLength(cdrom);
+				if(CDlen != -1) {
+					cdrom->track[i].length	= CDlen - cdrom->track[i].offset;
+				} else {
+					cdrom->track[i].length	=0;
+				}
 			}
 			else
 			{
@@ -239,18 +287,22 @@ static int SDL_SYS_CDGetTOC(SDL_CD *cdrom)
 	return(okay ? 0 : -1);
 }
 
+
 static CDstatus SDL_SYS_CDStatus(SDL_CD *cdrom, int *position)
 {
 	static const UBYTE	Cmd[10]	=
 		{ 0x42, 0, 0x40, 0x01, 0, 0, 0, SCSI_INBUF_SIZE >> 8, SCSI_INBUF_SIZE & 0xff, 0 };
 	CDstatus	status;
+	LONG	statcode;
+	statcode=SendCMD(cdrom, Cmd, sizeof(Cmd));
 
 	status	= CD_ERROR;
-
-	if (SendCMD(cdrom, Cmd, sizeof(Cmd)) == 0)
+	if (statcode == 0)
 	{
 		struct MyCDROM	*entry	= CDList[cdrom->id];
 		UBYTE	*buf;
+		int pos;
+		UBYTE	byte1,byte2,byte3,byte4;
 
 		buf	= (UBYTE *)entry->inbuf;
 
@@ -258,12 +310,19 @@ static CDstatus SDL_SYS_CDStatus(SDL_CD *cdrom, int *position)
 		{
 			case 0x11: status	= CD_PLAYING; break;
 			case 0x12: status	= CD_PAUSED; break;
-//			case 0x13: status	= CD_STOPPED; break;	// Finished
+			case 0x13: status	= CD_STOPPED; break;	// Finished
+			case 0x15: status	= CD_STOPPED; break;
 
 			default	:
 			case 0x14: status	= CD_ERROR; break;
 		}
 
+		byte1 = buf[8]; byte2 = buf[9]; byte3 = buf[10]; byte4 = buf[11];
+		pos = (byte1<<24) + (byte2<<16) + (byte3<<8) + byte4;
+
+		if (position!=NULL) {
+		*position = pos;
+		}
 	}
 
 	return status;
@@ -277,7 +336,7 @@ static int SDL_SYS_CDPlay(SDL_CD *cdrom, int start, int length)
 	tmp[1]	= start >> 16;
 	tmp[2]	= start;
 	tmp[3]	= length >> 16;
-	tmp[4]	= length;
+	tmp[4]	= length; 
 
 	SendCMD(cdrom, Cmd, sizeof(Cmd));
 	return 0;
@@ -313,15 +372,70 @@ static int SDL_SYS_CDEject(SDL_CD *cdrom)
 	return 0;
 }
 
+static int SDL_SYS_CDGetVolume(SDL_CD *cdrom, int *vol0, int *vol1)
+{
+	int statcode;
+	static const UBYTE Cmd[10] = { 0x5a, 0x08, 0x0e, 0, 0, 0, 0, SCSI_INBUF_SIZE >> 8, SCSI_INBUF_SIZE & 0xff, 0 };
+	statcode = SendCMD(cdrom, Cmd, sizeof(Cmd));
+
+	if (statcode == 0)
+	{
+		struct MyCDROM	*entry	= CDList[cdrom->id];
+		UBYTE	*buf;
+		buf	= (UBYTE *)entry->inbuf;
+
+		if (((buf[0]<<8)+buf[1])!= 22 || ((buf[6]<<8)+buf[7])!=0)
+		{
+			return(-1);
+		}
+
+		*vol0 = buf[8+9];
+		*vol1 = buf[8+11];
+	}
+
+	return statcode;
+
+}
+
+static int SDL_SYS_CDSetVolume(SDL_CD *cdrom, int vol0, int vol1)
+{
+	int statcode;
+	static const UBYTE Cmd[10] = { 0x5a, 0x08, 0x0e, 0, 0, 0, 0, SCSI_INBUF_SIZE >> 8, SCSI_INBUF_SIZE & 0xff, 0 };
+	statcode = SendCMD(cdrom, Cmd, sizeof(Cmd));
+
+	if (statcode == 0)
+	{
+		struct MyCDROM	*entry	= CDList[cdrom->id];
+		UBYTE	*buf;
+		buf	= (UBYTE *)entry->inbuf;
+
+		if (((buf[0]<<8)+buf[1])!= 22 || ((buf[6]<<8)+buf[7])!=0)
+		{
+			return(-1);
+		}
+		else
+		{
+			static UBYTE Cmd[10] = { 0x55, 0x10, 0, 0, 0, 0, 0, 0, 8+16,  0 };
+		
+			buf[8+9] = vol0;
+			buf[8+11] = vol1;
+			statcode = SendCMD(cdrom, Cmd, sizeof(Cmd));
+			return(statcode);
+		}		
+	}
+
+	return(statcode);
+}
+
 int  SDL_SYS_CDInit(void)
 {
 	struct DosList	*dlist;
 	ULONG	devices, retval = 1;
-	UBYTE	**cdlist;
+	struct MyCDROM **cdlist;
 
 	cdlist	= CDList;
-	retval	= 0;
 	devices	= 0;
+	SDL_numcds = 0;
 
 	SDL_CDcaps.Name = SDL_SYS_CDName;
 	SDL_CDcaps.Open = SDL_SYS_CDOpen;
@@ -333,6 +447,8 @@ int  SDL_SYS_CDInit(void)
 	SDL_CDcaps.Stop = SDL_SYS_CDStop;
 	SDL_CDcaps.Eject = SDL_SYS_CDEject;
 	SDL_CDcaps.Close = SDL_SYS_CDClose;
+	SDL_CDcaps.GetVolume = SDL_SYS_CDGetVolume;
+	SDL_CDcaps.SetVolume = SDL_SYS_CDSetVolume;
 
 	dlist	= LockDosList(LDF_DEVICES|LDF_READ);
 
@@ -376,8 +492,9 @@ int  SDL_SYS_CDInit(void)
 							entry->inbuf		= NULL;
 							entry->sensebuf	= NULL;
 
-							cdlist[devices] = (char *)entry;
+							cdlist[devices] = (struct MyCDROM *)entry;
 							devices++;
+
 						}
 					}
 				}
@@ -449,11 +566,10 @@ int  SDL_SYS_CDInit(void)
 								CloseDevice((struct IORequest *)req);
 							}
 
-							if (is_cdrom == 0)
+							if (is_cdrom == 1)
 							{
-								devices--;
-
-								cdlist[i]	= cdlist[devices];
+								cdlist[SDL_numcds]	= cdlist[i];
+								SDL_numcds++;
 							}
 						}
 

@@ -192,6 +192,12 @@ extern DECLSPEC int SDLCALL SDL_CDEject(SDL_CD *cdrom);
 /** Closes the handle for the CD-ROM drive */
 extern DECLSPEC void SDLCALL SDL_CDClose(SDL_CD *cdrom);
 
+/** Gets the volume of the 2 stereo channels */
+extern DECLSPEC int SDLCALL SDL_CDGetVolume(SDL_CD *cdrom, int *vol0, int *vol1);
+
+/** Sets the volume of the 2 stereo channels */
+extern DECLSPEC int SDLCALL SDL_CDSetVolume(SDL_CD *cdrom, int vol0, int vol1);
+
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
