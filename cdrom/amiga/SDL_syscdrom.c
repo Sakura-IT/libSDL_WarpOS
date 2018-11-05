@@ -504,8 +504,10 @@ int  SDL_SYS_CDInit(void)
 
 	UnLockDosList(LDF_DEVICES|LDF_READ);
 
-	if (devices)
+	if (!devices)
 	{
+		return -1;
+	} else {
 		struct IOStdReq	*req;
 		struct SCSICmd		*scsicmd;
 		struct MsgPort	*port;
@@ -585,8 +587,11 @@ int  SDL_SYS_CDInit(void)
 			DeleteIORequest((struct IORequest *)req);
 		}
 	}
-
-	return(0);
+	if(SDL_numcds) {
+		return(0);
+	} else {
+		return(-1);
+	}
 }
 
 void SDL_SYS_CDQuit(void)
