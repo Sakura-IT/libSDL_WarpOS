@@ -63,6 +63,12 @@ extern struct CDcaps {
 
 	/* Close the specified drive */
 	void (*Close)(SDL_CD *cdrom);
+
+	/* Get CD volume */
+	int (*GetVolume)(SDL_CD *cdrom, int *vol0, int *vol1);
+
+	/* Set CD volume */
+	int (*SetVolume)(SDL_CD *cdrom, int vol0, int vol1);
 } SDL_CDcaps;
 
 /* The number of available CD-ROM drives on the system */

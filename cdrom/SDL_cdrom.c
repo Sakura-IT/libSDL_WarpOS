@@ -45,6 +45,8 @@ struct CDcaps SDL_CDcaps = {
 	NULL,					/* Stop */
 	NULL,					/* Eject */
 	NULL,					/* Close */
+	NULL,					/* GetVolume */
+	NULL,					/* SetVolume */
 };
 int SDL_numcds;
 
@@ -74,9 +76,11 @@ static int CheckInit(int check_cdrom, SDL_CD **cdrom)
 			okay = 0;
 		}
 	}
+
 	if ( ! SDL_cdinitted ) {
 		SDL_SetError("CD-ROM subsystem not initialized");
 	}
+
 	return(okay);
 }
 
@@ -86,6 +90,24 @@ int SDL_CDNumDrives(void)
 		return(-1);
 	}
 	return(SDL_numcds);
+}
+
+int SDL_CDGetVolume(SDL_CD *cdrom, int *vol0, int *vol1)
+{
+	if ( ! CheckInit(1, &cdrom) ) {
+		return(-1);
+	}
+	
+	return SDL_CDcaps.GetVolume(cdrom, vol0, vol1);
+}
+
+int SDL_CDSetVolume(SDL_CD *cdrom, int vol0, int vol1)
+{
+	if ( ! CheckInit(1, &cdrom) ) {
+		return(-1);
+	}
+	
+	return SDL_CDcaps.SetVolume(cdrom, vol0, vol1);
 }
 
 const char *SDL_CDName(int drive)
@@ -233,9 +255,6 @@ int SDL_CDPlayTracks(SDL_CD *cdrom,
 	}
 
 	/* Play! */
-#ifdef DEBUG_CDROM
-  fprintf(stderr, "Playing %d frames at offset %d\n", length, start);
-#endif
 	return(SDL_CDcaps.Play(cdrom, start, length));
 }
 
