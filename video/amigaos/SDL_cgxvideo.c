@@ -298,11 +298,11 @@ Uint32 MakeBitMask(_THIS,int type,int format,int *bpp)
 			{			
 				case 0:
 					D(bug("RGB15PC/BGR15\n"));
-					return 0x1f;
+					return 0x7c00;
 				case 1:
 					return 0x3e0;
 				case 2:
-					return 0x7c00;
+					return 0x1f;
 			}
 		case PIXFMT_RGB15:
 		case PIXFMT_BGR15PC:
@@ -310,11 +310,11 @@ Uint32 MakeBitMask(_THIS,int type,int format,int *bpp)
 			{
 				case 0:
 					D(bug("RGB15/BGR15PC\n"));
-					return 0x7c00;
+					return 0x7c;
 				case 1:
-					return 0x3e0;
+					return 0xe003;
 				case 2:
-					return 0x1f;
+					return 0x1f00;
 			}
 		case PIXFMT_BGR16PC:
 		case PIXFMT_RGB16:
@@ -705,6 +705,16 @@ static void CGX_SetSizeHints(_THIS, int w, int h, Uint32 flags)
 	}
 }
 
+struct Library *findlib(char *name)
+{
+	struct Library *lib;
+	Forbid();
+	lib = (struct Library *)FindName(&SysBase->LibList, name);
+	Permit();
+	return(lib);
+}
+
+
 int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			    int w, int h, int bpp, Uint32 flags)
 {
@@ -836,7 +846,7 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 		if(!SDL_Window)
 			return -1;
 	}
-	this->hidden->swap_bytes = 0; 
+	this->hidden->swap_bytes = 1; 
 	if ((flags & SDL_OPENGL) == 0)
 	{ 
 		switch(GetCyberMapAttr(SDL_Window->RPort->BitMap, CYBRMATTR_PIXFMT))
@@ -845,14 +855,21 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			case PIXFMT_BGR15:
 			case PIXFMT_RGB16PC:
 			case PIXFMT_BGR16:
-			this->hidden->swap_bytes = 1; 
+			this->hidden->swap_bytes = 0; 
 			break;
                     
 			case PIXFMT_BGRA32:
-			//this->hidden->swap_bytes = 1; 
+			//this->hidden->swap_bytes = 0; 
 			break;
 		}
 	} 
+
+	if(findlib("pci.library")){
+		if(findlib("Radeon.card")||findlib("Voodoo.card")) {
+				this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
+		}
+	} 
+
 	this->hidden->BytesPerPixel=GetCyberMapAttr(SDL_Window->RPort->BitMap,CYBRMATTR_BPPIX);
 
 	if(screen->flags & SDL_DOUBLEBUF)
