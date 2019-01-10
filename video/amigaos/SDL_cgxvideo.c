@@ -869,7 +869,11 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 				this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
 		}
 	} 
-
+	
+	if(findlib("trance.library")){
+		this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
+	}
+				
 	this->hidden->BytesPerPixel=GetCyberMapAttr(SDL_Window->RPort->BitMap,CYBRMATTR_BPPIX);
 
 	if(screen->flags & SDL_DOUBLEBUF)
