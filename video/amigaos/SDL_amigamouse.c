@@ -29,6 +29,11 @@ static char rcsid =
  "@(#) $Id$";
 #endif
 
+#pragma pack(push,2)
+#include <proto/exec.h>
+#include <devices/input.h>
+#pragma pack(pop)
+
 #include "SDL_error.h"
 #include "SDL_mouse.h"
 #include "SDL_amigamouse_c.h"
@@ -171,7 +176,65 @@ void amiga_CheckMouseMode(_THIS)
 	SDL_Unlock_EventThread();
 }
 
+        static struct IOStdReq *req;
+   	static struct MsgPort *port;
+
 void amiga_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 {
-/* FIXME: Not implemented */
+	D(bug("[SDL] amiga_WarpWMCursor(%ld, %ld)\n", x, y));
+
+	if (mouse_relative)
+	{
+		SDL_PrivateMouseMotion(0, 0, x, y);
+	}
+	else if (this->hidden->window_active)
+	{
+		/* Note: code below may cause unwanted side effects
+		 *
+		 */
+
+		SDL_Lock_EventThread();
+
+   	port = CreateMsgPort();
+	   req  = (struct IOStdReq *)CreateIORequest(port, sizeof(*req));
+
+   	if (req)
+	   {
+		   if (OpenDevice("input.device", 0, (struct IORequest *)req, 0) == 0)
+		   {
+				struct InputEvent *ie;
+				struct IEPointerPixel *newpos;
+
+				if ((ie = malloc(sizeof(*ie) + sizeof(*newpos))))
+				{
+					newpos = (struct IEPointerPixel *)(ie + 1);
+
+					newpos->iepp_Screen = SDL_Display;
+					newpos->iepp_Position.X = x + SDL_Window->BorderLeft + SDL_Window->LeftEdge;
+					newpos->iepp_Position.Y = y + SDL_Window->BorderTop + SDL_Window->TopEdge;
+
+					ie->ie_EventAddress = newpos;
+					ie->ie_NextEvent    = NULL;
+					ie->ie_Class        = IECLASS_NEWPOINTERPOS;
+					ie->ie_SubClass     = IESUBCLASS_PIXEL;
+					ie->ie_Code         = IECODE_NOBUTTON;
+					ie->ie_Qualifier    = 0;
+
+					req->io_Data    = ie;
+					req->io_Length  = sizeof(*ie);
+					req->io_Command = IND_WRITEEVENT;
+
+					DoIO((struct IORequest *)req);
+					free(ie);
+				}
+
+				CloseDevice((struct IORequest *)req);
+			}
+		}
+
+		DeleteIORequest((struct IORequest *)req);
+		DeleteMsgPort(port);
+
+		SDL_Unlock_EventThread();
+	}
 }
