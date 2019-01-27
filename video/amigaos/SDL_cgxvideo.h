@@ -133,6 +133,7 @@ struct SDL_PrivateVideoData {
     struct BitMap *bmap;
     Uint32 oldqual,oldkey; 
     UBYTE window_active;
+    APTR WindowCursor;
 
     /* additions for AMMX version */
     UBYTE dbscrollscreen;  /* use scrolling screen instead of screen buffer swap (Vampire/Apollo) */
