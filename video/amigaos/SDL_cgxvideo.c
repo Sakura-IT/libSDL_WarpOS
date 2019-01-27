@@ -815,12 +815,19 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 
 	/* Create (or use) the X11 display window */
 
+	ULONG idcmp = IDCMP_RAWKEY|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_ACTIVEWINDOW|IDCMP_INACTIVEWINDOW; //|IDCMP_MENUPICK;
+
+	if (mouse_relative)
+	{
+		idcmp |= IDCMP_DELTAMOVE;
+	}
+
 	if ( !SDL_windowid ) {
 			if( flags & SDL_FULLSCREEN )
 			{
 				SDL_Window = OpenWindowTags(NULL,WA_Width,w,WA_Height,h,
 											WA_Flags,WFLG_ACTIVATE|WFLG_RMBTRAP|WFLG_BORDERLESS|WFLG_BACKDROP|WFLG_REPORTMOUSE,
-											WA_IDCMP,IDCMP_RAWKEY|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE,
+											WA_IDCMP,idcmp,
 											WA_CustomScreen,(ULONG)SDL_Display,
 											TAG_DONE);
 
@@ -836,7 +843,7 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 
 				SDL_Window = OpenWindowTags(NULL,WA_InnerWidth,w,WA_InnerHeight,h,
 											WA_Flags,WFLG_REPORTMOUSE|WFLG_ACTIVATE|WFLG_RMBTRAP | ((flags&SDL_NOFRAME) ? 0 : (WFLG_DEPTHGADGET|WFLG_CLOSEGADGET|WFLG_DRAGBAR | ((flags&SDL_RESIZABLE) ? WFLG_SIZEGADGET|WFLG_SIZEBBOTTOM : 0))),
-											WA_IDCMP,IDCMP_RAWKEY|IDCMP_CLOSEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_NEWSIZE|IDCMP_MOUSEMOVE,
+											WA_IDCMP,idcmp|IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE,
 											WA_PubScreen,(ULONG)SDL_Display,
 											WA_GimmeZeroZero, gzz,
 														TAG_DONE);

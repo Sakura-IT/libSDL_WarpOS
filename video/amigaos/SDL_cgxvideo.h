@@ -135,6 +135,11 @@ struct SDL_PrivateVideoData {
     UBYTE window_active;
     APTR WindowCursor;
 
+    /* Grab input */
+
+    ULONG grabbing_input;
+    ULONG should_grab_input;
+
     /* additions for AMMX version */
     UBYTE dbscrollscreen;  /* use scrolling screen instead of screen buffer swap (Vampire/Apollo) */
     UWORD dbpos;	   /* current screen position (vertical, scrolled) */

@@ -50,6 +50,7 @@ static char rcsid =
 #include "SDL_cgxwm_c.h"
 
 #include "SDL_amigaevents_c.h"
+#include "SDL_amigamouse_c.h"
 
 /* The translation tables from an Amiga keysym to a SDL keysym */
 static SDLKey MISC_keymap[256];
@@ -183,43 +184,41 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 	int class=msg->Class,code=msg->Code;
 	int posted;
 	int qual = msg->Qualifier;
-	BPTR  fh = 0;
 
 	posted = 0;
 
 	switch (class) {
-	    /* Gaining mouse coverage? */
-	    case IDCMP_ACTIVEWINDOW:
-            this->hidden->window_active = 1;
-			this->hidden->oldqual = 0;
-			posted = SDL_PrivateAppActive(1, SDL_APPMOUSEFOCUS);
-			if (!_sdl_no_lower_taskpri)
+	
+		 /* Gaining mouse coverage? */
+		 case IDCMP_ACTIVEWINDOW:
+			this->hidden->window_active = 1;
+			this->hidden->oldkey = 0;
+			SDL_PrivateAppActive(1, SDL_APPINPUTFOCUS);	// SDL_APPMOUSEFOCUS
+			
+			this->hidden->should_grab_input = 1;
+			if (this->hidden->should_grab_input)
 			{
-				fh = Open("env:SDL_NOLOWERTASKPRI",1005);
-				if (!fh)
-				{
-				if (oldtaskpri ==0)SetTaskPri(FindTask(0),0); 
-				}
-			if (fh)Close(fh);
+				this->input_grab = SDL_GRAB_ON;
 			}
+			amiga_CheckMouseMode(this);
+
 			break;
 
-	    /* Losing mouse coverage? */
-	    case IDCMP_INACTIVEWINDOW:
-            this->hidden->window_active = 0;
-			posted = SDL_PrivateAppActive(0, SDL_APPMOUSEFOCUS);
-			if (!_sdl_no_lower_taskpri)
+		 /* Losing mouse coverage? */
+		 case IDCMP_INACTIVEWINDOW:
+			this->hidden->window_active = 0;
+			this->hidden->grabbing_input = 0;
+			SDL_PrivateAppActive(0, SDL_APPINPUTFOCUS);
+
+			if (this->hidden->grabbing_input)
 			{
-				fh = Open("env:SDL_NOLOWERTASKPRI",1005);
-				if (!fh)
-				{
-				oldtaskpri = SetTaskPri(FindTask(0),-1);
-				if (oldtaskpri != 0)SetTaskPri(FindTask(0),oldtaskpri); // only a thread with pri 0 is lower 
-			   
-				}
-				if (fh)Close(fh);
+				this->input_grab = SDL_GRAB_OFF;
+				this->hidden->should_grab_input = 1;
 			}
+			amiga_CheckMouseMode(this);
+
 			break;
+
 #if 0
 	    /* Gaining input focus? */
 	    case IDCMP_ACTIVEWINDOW:
@@ -241,13 +240,22 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 #endif
 	    /* Mouse motion? */
 	    case IDCMP_MOUSEMOVE:
-            
-			if ( SDL_VideoSurface ) {
-				//posted = SDL_PrivateMouseMotion(0, 0,
-				//		msg->MouseX-SDL_Window->BorderLeft,
-				//		msg->MouseY-SDL_Window->BorderTop);
-				mousex = msg->MouseX-SDL_Window->BorderLeft;
-				mousey = msg->MouseY-SDL_Window->BorderTop;
+            		if ( SDL_VideoSurface )
+			{
+				/* ... for relative mouse coords */
+
+				if (mouse_relative == 1)
+				{
+					SDL_PrivateMouseMotion(0, mouse_relative, msg->MouseX, msg->MouseY);
+				}
+				else
+				{
+					posted = SDL_PrivateMouseMotion(0, mouse_relative,
+						msg->MouseX-SDL_Window->BorderLeft,
+						msg->MouseY-SDL_Window->BorderTop);
+					//mousex = msg->MouseX-SDL_Window->BorderLeft;
+					//mousey = msg->MouseY-SDL_Window->BorderTop;
+				}
 			}
 	    	break;
 
