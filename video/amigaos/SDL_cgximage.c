@@ -19,17 +19,17 @@
     Sam Lantinga
     slouken@libsdl.org
 */
-#define BITMAPMEM
+#include "SDL_config.h"
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
 #endif
 
+#define BITMAPMEM
 #include <stdlib.h>
 #ifndef _HAVE_STDINT_H
 #include <sys/types.h>
 #endif
-#include "SDL_config.h"
 #include "SDL_error.h"
 #include "SDL_endian.h"
 #include "SDL_cgximage_c.h"
@@ -96,60 +96,13 @@ Uint32 SDL_Swap2x16_b(Uint32 x)
 #if defined(WARPOS)
 	Uint32 resultx;
 	Uint32 dummy;
-	__asm__("rlwinm %2,%1,8,0,31\n\trlwimi %2,%1,24,8,15\n\trlwimi %2,%1,24,24,31\n\tmr %0,%2\t\n" : "=r" (resultx) : "r" (x), "r" (dummy));
+	__asm__("rlwinm %2,%1,8,0,31\n\trlwimi %2,%1,24,8,15\n\trlwimi %2,%1,24,24,31\n\tmr %0,%2\n" : "=r" (resultx) : "r" (x), "r" (dummy));
 	return resultx;
 #else	
 	__asm__("rorw #8,%0\n\tswap %0\n\trorw #8,%0\n\tswap %0\t\n" : "=d" (x) :  "0" (x) : "cc");
 	return x;
 #endif
 }
-
-#if 0
-void bcopy_swap2(APTR dst, APTR src, int size)
-{
-	Uint32 *s; 
-	Uint32 *d;
-	
-		s = src;
-		d = dst;
-	    if (!d)return;
-		if (!s)return;
-	if ( size >= 16)
-	{
-		do
-		{	
-			*(d++) = SDL_Swap2x16_b(*s++);
-			*(d++) = SDL_Swap2x16_b(*s++);
-			*(d++) = SDL_Swap2x16_b(*s++);
-			*(d++) = SDL_Swap2x16_b(*s++);
-			size-=16;
-		}
-	while (size >=16);
-	}
-	if (size > 0)
-	{
-		UWORD *s, *d;
-
-		s = src;
-		d = dst;
-
-		do
-		{
-			//UWORD a = *s;
-
-			//*d = ((a >> 8) & 0xff) | ((a & 0xff) << 8);
-			*d = SDL_Swap16(*s);
-
-			s++;
-			d++;
-			size-=2;
-		}
-		while (size > 0);
-	}
-	
-}
-
-#endif
 
 int CGX_SetupImage(_THIS, SDL_Surface *screen)
 {
@@ -388,8 +341,6 @@ int CGX_LockHWSurface(_THIS, SDL_Surface *surface)
 					LBMI_BYTESPERROW,(ULONG)&pitch,TAG_DONE)))
 				return -1;
 		   }
-// surface->pitch e' a 16bit!
-
 			surface->pitch=pitch;
 
 			//if(currently_fullscreen&&surface==SDL_VideoSurface)
@@ -461,7 +412,7 @@ int CGX_FlipHWSurface(_THIS, SDL_Surface *surface)
 		if(!SafeChange)
 		{ 
 			Wait(disp_sigbit);
- //Non faccio nulla, vuoto solo la porta
+
 			while(GetMsg(dispport)!=NULL)
 				;
 			SafeChange=TRUE;

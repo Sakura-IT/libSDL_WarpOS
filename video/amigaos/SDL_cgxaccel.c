@@ -19,52 +19,30 @@
     Sam Lantinga
     slouken@libsdl.org
 */
+
 #include <SDL_config.h>
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
 #endif
 
-//#include "SDL_error.h"
-//#include "SDL_endian.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_blit.h"
 #include "SDL_video.h"
 #include "SDL_cgxvideo.h"
 
-#ifdef AROS
-#include <stdlib.h>
-#endif
 #define Bug 
 static int CGX_HWAccelBlit(SDL_Surface *src, SDL_Rect *srcrect,
 					SDL_Surface *dst, SDL_Rect *dstrect);
 
 // These are needed to avoid register troubles with gcc -O2!
 
-#if 1
-/*
- * it was: defined(__SASC) || defined(__PPC__) || defined(MORPHOS)
- *
- * This is a workaround for an old gcc 2.7.x bug...
- */
-
 #define BMKBRP(a,b,c,d,e,f,g,h,i,j) BltMaskBitMapRastPort(a,b,c,d,e,f,g,h,i,j)
 #define	BBRP(a,b,c,d,e,f,g,h,i) BltBitMapRastPort(a,b,c,d,e,f,g,h,i)
 #define BBB(a,b,c,d,e,f,g,h,i,j,k) BltBitMap(a,b,c,d,e,f,g,h,i,j,k)
-#else
-void BMKBRP(struct BitMap *a,long b, long c,struct RastPort *d,long e,long f,long g,long h,unsigned long i,APTR j)
-{BltMaskBitMapRastPort(a,b,c,d,e,f,g,h,i,j);}
-
-void BBRP(struct BitMap *a,long b, long c,struct RastPort *d,long e,long f,long g,long h,unsigned long i)
-{BltBitMapRastPort(a,b,c,d,e,f,g,h,i);}
-
-void BBB(struct BitMap *a,long b, long c,struct BitMap *d,long e,long f,long g,long h,unsigned long i,unsigned long j,PLANEPTR k)
-{BltBitMap(a,b,c,d,e,f,g,h,i,j,k);}
-#endif
 
 int CGX_SetHWColorKey(_THIS,SDL_Surface *surface, Uint32 key)
 {
-	return -1; // do no accel blits
 	if(surface->hwdata)
 	{
 		if(surface->hwdata->mask)

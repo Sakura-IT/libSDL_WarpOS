@@ -20,6 +20,7 @@
     slouken@libsdl.org
 */
 
+#include "SDL_config.h"
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
@@ -60,11 +61,6 @@ static char rcsid =
 #include "SDL_cgxmodes_c.h"
 #include "SDL_cgximage_c.h"
 #include "SDL_cgxyuv_c.h"
-
-#ifdef _AROS
-#include <stdlib.h>
-#include <proto/alib.h>
-#endif
 
 /* Initialization/Query functions */
 static int CGX_VideoInit(_THIS, SDL_PixelFormat *vformat);
@@ -222,6 +218,8 @@ static SDL_VideoDevice *CGX_CreateDevice(int devindex)
 	}
 	memset(device->hidden, 0, sizeof(*device->hidden));
 	memset(device->gl_data, 0, sizeof(*device->gl_data));
+	if ((device->hidden->WorkbenchPort = CreateMsgPort()) != NULL)
+		device->hidden->WorkbenchSigs = (1 << device->hidden->WorkbenchPort->mp_SigBit);
 
 	/* Set the driver flags */
 	device->handles_any_size = 1;
@@ -261,7 +259,7 @@ static SDL_VideoDevice *CGX_CreateDevice(int devindex)
 	device->SetIcon = CGX_SetIcon;
 	device->SetCaption = CGX_SetCaption;
 	device->IconifyWindow = NULL; /* CGX_IconifyWindow; */
-	device->GrabInput = NULL /* CGX_GrabInput*/;
+	device->GrabInput = CGX_GrabInput;
 	device->GetWMInfo = CGX_GetWMInfo;
 	device->FreeWMCursor = amiga_FreeWMCursor;
 	device->CreateWMCursor = amiga_CreateWMCursor;

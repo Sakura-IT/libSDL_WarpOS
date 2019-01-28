@@ -20,20 +20,20 @@
     slouken@libsdl.org
 */
 
+#include <SDL_config.h> 
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
 #endif
  
-/* StormMesa implementation of SDL OpenGL support */
-#include <SDL_config.h> 
+/* MiniGL implementation of SDL OpenGL support */
 #include "SDL_error.h"
 #include "SDL_cgxgl_c.h"
 #include "SDL_cgxvideo.h"
 
-#pragma pack(2)
+#pragma pack(push, 2)
 #include <mgl/gl.h>
-#pragma pack()
+#pragma pack(pop)
 
 extern void *AmiGetGLProc(const char *proc);
 #define	GL_ACCUM_RED_BITS                0x0D58

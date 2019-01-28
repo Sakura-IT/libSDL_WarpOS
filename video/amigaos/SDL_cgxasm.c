@@ -5,15 +5,15 @@
  */
 
 
-#pragma pack(2)
+#pragma pack(push, 2)
 #include <exec/types.h>
-#pragma pack()
+#pragma pack(pop)
 
 #include "SDL_types.h"
 #include "SDL_cpuinfo.h"
 #include "SDL_cgxasm.h"
 
-#if SDL_ALTIVEC_COPY
+#ifdef SDL_ALTIVEC_COPY
 #include <hardware/vector.h>
 #ifdef HAVE_ALTIVEC_H
 #include <altivec.h>
@@ -114,7 +114,7 @@ asm("copy_and_swap32_generic:\n\
 
 void copy_and_swap16(APTR srcx, APTR destx, LONG pixels)
 {
-	#if SDL_ALTIVEC_COPY
+	#ifdef SDL_ALTIVEC_COPY
 	if (SDL_HasAltiVec())
 		{
 		copy_and_swap16_altivec(srcx, destx, pixels);
@@ -128,7 +128,7 @@ void copy_and_swap16(APTR srcx, APTR destx, LONG pixels)
 
 void copy_and_swap32(APTR srcx, APTR destx, LONG pixels)
 {
-	#if SDL_ALTIVEC_COPY
+	#ifdef SDL_ALTIVEC_COPY
 	if (SDL_HasAltiVec())
 		{
 		copy_and_swap32_altivec(srcx, destx, pixels);
@@ -140,7 +140,7 @@ void copy_and_swap32(APTR srcx, APTR destx, LONG pixels)
 		}
 }
 
-#if SDL_ALTIVEC_COPY
+#ifdef SDL_ALTIVEC_COPY
 
 /* AltiVec routines written by Grzegorz Kraszewski
  *

@@ -22,8 +22,8 @@
     Additional (MorphOS) code by LouiSe@louise.amiga.hu
 
 */
-#include "SDL_config.h"
 
+#include "SDL_config.h"
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
@@ -40,7 +40,6 @@ static char rcsid =
 #include "../SDL_cursor_c.h"
 #include "../../events/SDL_events_c.h"
 
-//#include "mydebug.h"
 
 /* The implementation dependent data for the window manager cursor */
 

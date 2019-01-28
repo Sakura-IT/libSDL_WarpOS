@@ -140,6 +140,21 @@ struct SDL_PrivateVideoData {
     ULONG grabbing_input;
     ULONG should_grab_input;
 
+    /* Workbench related */
+
+    struct AppIcon    *AppIcon;
+    struct DiskObject *DiskObj;
+    struct MsgPort    *WorkbenchPort;
+    ULONG             WorkbenchSigs;
+
+    /* Additional HW overlay information */
+
+    void *overlay;
+    ULONG overlay_attached, overlay_colorkey;
+    ULONG overlay_left, overlay_top;
+    ULONG overlay_right, overlay_bottom;
+    SDL_Rect overlay_rect;
+
     /* additions for AMMX version */
     UBYTE dbscrollscreen;  /* use scrolling screen instead of screen buffer swap (Vampire/Apollo) */
     UWORD dbpos;	   /* current screen position (vertical, scrolled) */

@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997, 1998, 1999, 2000, 2001  Sam Lantinga
+    Copyright (C) 1997-2010 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -18,78 +18,258 @@
 
     Sam Lantinga
     slouken@libsdl.org
+
+
+		20040501	Debug lines added
 */
+#include "SDL_config.h"
 
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
 #endif
 
-/* This is the XFree86 Xv extension implementation of YUV video overlays */
-
-#ifdef XFREE86_XV
+#define USE_INLINE_STDARG
 
 #include <stdlib.h>
 #include <string.h>
-#include <X11/Xlib.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <X11/extensions/XShm.h>
-#include <X11/extensions/Xvlib.h>
-
 #include "SDL_error.h"
 #include "SDL_video.h"
-#include "SDL_x11yuv_c.h"
-#include "SDL_yuvfuncs.h"
+#include "SDL_cgxyuv_c.h"
+#include "../SDL_yuvfuncs.h"
 
-/* The functions used to manipulate software video overlays */
-static struct private_yuvhwfuncs x11_yuvfuncs = {
-	X11_LockYUVOverlay,
-	X11_UnlockYUVOverlay,
-	X11_DisplayYUVOverlay,
-	X11_FreeYUVOverlay
-};
+#include "mydebug.h"
+
+#include <cybergraphx/cgxvideo.h>
+#include <proto/cgxvideo.h>
+
+#ifndef SRCFMT_YCbCr420
+#define SRCFMT_YCbCr420 4
+#endif
 
 struct private_yuvhwdata {
-	int port;
-	XShmSegmentInfo yuvshm;
-	XvImage *image;
+	struct Library *CGXVideoBase;
+	APTR VHandle;
+
+	/* These are just so we don't have to allocate them separately */
+	Uint16 pitches[3];
+	Uint8 *planes[3];
+	Uint32 cgx_format;
 };
 
+/**********************************************************************
+	CGX_DeleteOverlay
 
-SDL_Overlay *X11_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, SDL_Surface *display)
+	Remove overlay but keep structure (iconify/uniconify)
+**********************************************************************/
+
+void CGX_DeleteOverlay(_THIS, SDL_Overlay *overlay)
 {
-	SDL_Overlay *overlay;
-	struct private_yuvhwdata *hwdata;
-	int xv_port;
-	int i, j;
-	int adaptors;
-	XvAdaptorInfo *ainfo;
-	XShmSegmentInfo *yuvshm;
+	struct private_yuvhwdata *hwdata = overlay->hwdata;
+	struct Library	*CGXVideoBase	= hwdata->CGXVideoBase;
 
-	xv_port = -1;
-	if ( (Success == XvQueryExtension(GFX_Display, &j, &j, &j, &j, &j)) &&
-	     (Success == XvQueryAdaptors(GFX_Display,
-	                                 RootWindow(GFX_Display, SDL_Screen),
-	                                 &adaptors, &ainfo)) ) {
-		for ( i=0; (i<adaptors) && (xv_port == -1); ++i ) {
-			if ( (ainfo[i].type & XvInputMask) &&
-			     (ainfo[i].type & XvImageMask) ) {
-				int num_formats;
-				XvImageFormatValues *formats;
-				formats = XvListImageFormats(GFX_Display,
-				              ainfo[i].base_id, &num_formats);
-				for ( j=0; j<num_formats; ++j ) {
-					if ( (Uint32)formats[j].id == format ) {
-						xv_port = ainfo[i].base_id;
-						break;
-					}
-				}
-			}
+	if (hwdata->VHandle)
+	{
+		if ( this->hidden->overlay_attached )
+			DetachVLayer(hwdata->VHandle);
+
+		DeleteVLayerHandle(hwdata->VHandle);
+		hwdata->VHandle = NULL;
+	}
+}
+
+/**********************************************************************
+	CGX_RecreateOverlay
+
+	Restore overlay
+**********************************************************************/
+
+void CGX_RecreateOverlay(_THIS, SDL_Overlay *overlay)
+{
+	struct private_yuvhwdata *hwdata = overlay->hwdata;
+	struct Library	*CGXVideoBase	= hwdata->CGXVideoBase;
+
+	hwdata->VHandle	= CreateVLayerHandleTags(SDL_Display,
+		VOA_SrcType, hwdata->cgx_format,
+		VOA_SrcWidth, overlay->w,
+		VOA_SrcHeight, overlay->h,
+		VOA_UseColorKey, TRUE,
+		TAG_DONE);
+
+	if (hwdata->VHandle && this->hidden->overlay_attached)
+	{
+		SDL_Rect *dstrect;
+		ULONG right, left, top, bottom;
+
+		dstrect = &this->hidden->overlay_rect;
+
+		left = dstrect->x;
+		top = dstrect->y;
+
+		right = (SDL_Window->Width - SDL_Window->BorderLeft - SDL_Window->BorderRight);
+		if (right > (dstrect->w + dstrect->x))
+			right -= dstrect->w + dstrect->x;
+		else
+			right = 0;
+
+		bottom = (SDL_Window->Height - SDL_Window->BorderTop - SDL_Window->BorderBottom);
+		if (bottom > (dstrect->h + dstrect->y))
+			bottom -= dstrect->h + dstrect->y;
+		else
+			bottom = 0;
+
+		if (AttachVLayerTags(hwdata->VHandle, SDL_Window, VOA_LeftIndent, left, VOA_RightIndent, right, VOA_TopIndent, top, VOA_BottomIndent, bottom, TAG_DONE) == 0)
+		{
+			this->hidden->overlay_colorkey = GetVLayerAttr(hwdata->VHandle, VOA_ColorKey);
+			this->hidden->overlay_left  = left;
+			this->hidden->overlay_top   = top;
+			this->hidden->overlay_right = right;
+			this->hidden->overlay_bottom = bottom;
 		}
 	}
-	if ( xv_port == -1 ) {
-		SDL_SetError("No available video ports for requested format");
+}
+
+int CGX_LockYUVOverlay(_THIS, SDL_Overlay *overlay)
+{
+	struct private_yuvhwdata *hwdata = overlay->hwdata;
+	struct Library	*CGXVideoBase	= hwdata->CGXVideoBase;
+
+	if (LockVLayer(hwdata->VHandle))
+	{
+		APTR pixels = (APTR)GetVLayerAttr(hwdata->VHandle, VOA_BaseAddress);
+
+		switch (overlay->format)
+		{
+			case SDL_YV12_OVERLAY:
+				overlay->pixels[0] = pixels;
+				overlay->pixels[2] = overlay->pixels[0] + overlay->pitches[0] * overlay->h;
+				overlay->pixels[1] = overlay->pixels[2] + overlay->pitches[2] * overlay->h / 2;
+				break;
+			case SDL_IYUV_OVERLAY:
+				overlay->pixels[0] = pixels;
+				overlay->pixels[1] = overlay->pixels[0] + overlay->pitches[0] * overlay->h;
+				overlay->pixels[2] = overlay->pixels[1] + overlay->pitches[1] * overlay->h / 2;
+				break;
+			case SDL_YUY2_OVERLAY:
+			case SDL_UYVY_OVERLAY:
+			case SDL_YVYU_OVERLAY:
+				overlay->pixels[0] = pixels;
+				break;
+		}
+
+		return 0;
+	}
+
+	return -1;
+}
+
+void CGX_UnlockYUVOverlay(_THIS, SDL_Overlay *overlay)
+{
+	if (overlay->pixels[0])
+	{
+		struct private_yuvhwdata *hwdata = overlay->hwdata;
+		struct Library	*CGXVideoBase	= hwdata->CGXVideoBase;
+
+		overlay->pixels[0] = NULL;
+		overlay->pixels[1] = NULL;
+		overlay->pixels[2] = NULL;
+		UnlockVLayer(hwdata->VHandle);
+	}
+}
+
+int CGX_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *srcrect, SDL_Rect *dstrect)
+{
+	struct private_yuvhwdata *hwdata = overlay->hwdata;
+	struct Library	*CGXVideoBase	= hwdata->CGXVideoBase;
+	ULONG right,left,top,bottom;
+
+	left = dstrect->x;
+	top = dstrect->y;
+
+	right = (SDL_Window->Width - SDL_Window->BorderLeft - SDL_Window->BorderRight);
+	if (right > (dstrect->w + dstrect->x))
+		right -= dstrect->w + dstrect->x;
+	else
+		right = 0;
+
+	bottom = (SDL_Window->Height - SDL_Window->BorderTop - SDL_Window->BorderBottom);
+	if (bottom > (dstrect->h + dstrect->y))
+		bottom -= dstrect->h + dstrect->y;
+	else
+		bottom = 0;
+
+	this->hidden->overlay_rect = *dstrect;
+
+	if (this->hidden->overlay_attached)
+	{
+		if (this->hidden->overlay_left == left || this->hidden->overlay_right == right || this->hidden->overlay_top == top || this->hidden->overlay_bottom == bottom)
+			return 0;
+
+		SetVLayerAttrTags(hwdata->VHandle, VOA_LeftIndent, left, VOA_RightIndent, right, VOA_TopIndent, top, VOA_BottomIndent, bottom, TAG_DONE);
+	}
+	else
+	{
+		if (AttachVLayerTags(hwdata->VHandle, SDL_Window, VOA_LeftIndent, left, VOA_RightIndent, right, VOA_TopIndent, top, VOA_BottomIndent, bottom, TAG_DONE) == 0)
+		{
+			this->hidden->overlay_colorkey = GetVLayerAttr(hwdata->VHandle, VOA_ColorKey);
+			this->hidden->overlay_attached = 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	this->hidden->overlay_left  = left;
+	this->hidden->overlay_top   = top;
+	this->hidden->overlay_right = right;
+	this->hidden->overlay_bottom = bottom;
+
+	return 0;
+}
+
+void CGX_FreeYUVOverlay(_THIS, SDL_Overlay *overlay)
+{
+	struct private_yuvhwdata *hwdata = overlay->hwdata;
+
+	this->hidden->overlay = NULL;
+
+	if ( hwdata )
+	{
+		if (hwdata->VHandle)
+			CGX_DeleteOverlay(this, overlay);
+
+		this->hidden->overlay_attached = 0;
+
+		CloseLibrary(hwdata->CGXVideoBase);
+		free(hwdata);
+	}
+}
+
+/* The functions used to manipulate software video overlays */
+static const struct private_yuvhwfuncs cgx_yuvfuncs =
+{
+	CGX_LockYUVOverlay,
+	CGX_UnlockYUVOverlay,
+	CGX_DisplayYUVOverlay,
+	CGX_FreeYUVOverlay
+};
+
+SDL_Overlay *CGX_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, SDL_Surface *display)
+{
+	struct Library	*CGXVideoBase;
+	SDL_Overlay *overlay;
+	struct private_yuvhwdata *hwdata;
+	ULONG srcfmt;
+
+	/* Disabled SDL_YUY2_OVERLAY
+	 *
+	 * Would need byte swapping for SRCFMT_YCbCr16 format (itix)
+	 */
+
+	if ( format != SDL_YUY2_OVERLAY && format != SDL_YV12_OVERLAY && format != SDL_IYUV_OVERLAY ) {
+//	if ( format != SDL_YV12_OVERLAY && format != SDL_IYUV_OVERLAY ) {
+		SDL_SetError("No support for requested YUV format");
 		return(NULL);
 	}
 
@@ -105,9 +285,10 @@ SDL_Overlay *X11_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, S
 	overlay->format = format;
 	overlay->w = width;
 	overlay->h = height;
+	overlay->hw_overlay = 1;
 
 	/* Set up the YUV surface function structure */
-	overlay->hwfuncs = &x11_yuvfuncs;
+	overlay->hwfuncs = (struct private_yuvhwfuncs *)&cgx_yuvfuncs;
 
 	/* Create the pixel data and lookup tables */
 	hwdata = (struct private_yuvhwdata *)malloc(sizeof *hwdata);
@@ -117,75 +298,72 @@ SDL_Overlay *X11_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, S
 		SDL_FreeYUVOverlay(overlay);
 		return(NULL);
 	}
-	yuvshm = &hwdata->yuvshm;
-	memset(yuvshm, 0, sizeof(*yuvshm));
-	hwdata->port = xv_port;
-	hwdata->image = XvShmCreateImage(GFX_Display, xv_port, format,
-	                                 0, width, height, yuvshm);
-	if ( hwdata->image == NULL ) {
+	memset(hwdata, 0, (sizeof *hwdata));
+
+	overlay->pitches = hwdata->pitches;
+	overlay->pixels = hwdata->planes;
+
+	if ((CGXVideoBase = OpenLibrary("cgxvideo.library", 41)) == NULL)
+	{
+		SDL_SetError("No cgxvideo.library V41+ found!");
+		SDL_FreeYUVOverlay(overlay);
+		return NULL;
+	}
+
+	hwdata->CGXVideoBase	= CGXVideoBase;
+
+	switch (format)
+	{
+		case SDL_YV12_OVERLAY:
+		case SDL_IYUV_OVERLAY:
+			srcfmt = SRCFMT_YCbCr420;	/* We currently only support these.. */
+			break;
+		case SDL_YUY2_OVERLAY:
+			srcfmt = SRCFMT_YCbCr16;	/* ..and this (anything else is rejected at the beginning of func) */
+			break;
+		case SDL_UYVY_OVERLAY:
+		case SDL_YVYU_OVERLAY:
+		default:
+			srcfmt = 0xffffffff;		/* just to avoid warning */
+			break;
+	}
+
+	hwdata->cgx_format = srcfmt;
+
+	hwdata->VHandle	= CreateVLayerHandleTags(SDL_Display,
+		VOA_SrcType, srcfmt,
+		VOA_SrcWidth, width,
+		VOA_SrcHeight, height,
+		VOA_UseColorKey, TRUE,
+		TAG_DONE);
+
+	if (hwdata->VHandle == NULL)
+	{
 		SDL_OutOfMemory();
 		SDL_FreeYUVOverlay(overlay);
 		return(NULL);
 	}
-	yuvshm->shmid = shmget(IPC_PRIVATE, hwdata->image->data_size,
-	                       IPC_CREAT | 0777);
-	if ( yuvshm->shmid < 0 ) {
-		SDL_SetError("Unable to get %d bytes shared memory",
-		             hwdata->image->data_size);
-		SDL_FreeYUVOverlay(overlay);
-		return(NULL);
+
+	width = GetVLayerAttr(hwdata->VHandle, VOA_Modulo);
+
+	switch (format)
+	{
+		case SDL_YV12_OVERLAY:
+		case SDL_IYUV_OVERLAY:
+			overlay->pitches[0] = width/2;
+			overlay->pitches[1] = width/4;
+			overlay->pitches[2] = width/4;
+			overlay->planes = 3;
+			break;
+		case SDL_YUY2_OVERLAY:
+		case SDL_UYVY_OVERLAY:
+		case SDL_YVYU_OVERLAY:
+			overlay->pitches[0] = width*2;
+			overlay->planes = 1;
+			break;
 	}
-	yuvshm->shmaddr  = (caddr_t) shmat(yuvshm->shmid, 0, 0);
-	yuvshm->readOnly = False;
-	hwdata->image->data = yuvshm->shmaddr;
 
-	XShmAttach(GFX_Display, yuvshm);
-	XSync(GFX_Display, False);
-	shmctl(yuvshm->shmid, IPC_RMID, 0);
+	this->hidden->overlay = overlay;
 
-	/* We're all done.. */
 	return(overlay);
 }
-
-int X11_LockYUVOverlay(_THIS, SDL_Overlay *overlay)
-{
-	overlay->pixels = overlay->hwdata->image->data;
-	/* What should the pitch be set to? */
-	return(0);
-}
-
-void X11_UnlockYUVOverlay(_THIS, SDL_Overlay *overlay)
-{
-	overlay->pixels = NULL;
-}
-
-int X11_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *dstrect)
-{
-	struct private_yuvhwdata *hwdata;
-
-	hwdata = overlay->hwdata;
-	XvShmPutImage(GFX_Display, hwdata->port, SDL_Window, SDL_GC,
-	              hwdata->image, 0, 0, overlay->w, overlay->h,
-	              dstrect->x, dstrect->y, dstrect->w, dstrect->h, False);
-	XSync(GFX_Display, False);
-	return(0);
-}
-
-void X11_FreeYUVOverlay(_THIS, SDL_Overlay *overlay)
-{
-	struct private_yuvhwdata *hwdata;
-
-	hwdata = overlay->hwdata;
-	if ( hwdata ) {
-		if ( hwdata->yuvshm.shmaddr ) {
-			XShmDetach(GFX_Display, &hwdata->yuvshm);
-			shmdt(hwdata->yuvshm.shmaddr);
-		}
-		if ( hwdata->image ) {
-			XFree(hwdata->image);
-		}
-		free(hwdata);
-	}
-}
-
-#endif /* XFREE86_XV */

@@ -20,6 +20,7 @@
     slouken@libsdl.org
 */
 
+#include "SDL_config.h"
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
@@ -31,7 +32,6 @@ static char rcsid =
 #include <stdlib.h>
 #include <string.h>
 
-#include <SDL/SDL_config.h>
 #include "SDL_timer.h"
 #include "SDL_error.h"
 #include "SDL_events.h"
@@ -41,9 +41,7 @@ static char rcsid =
 #include "SDL_cgxmodes_c.h"
 #include "mydebug.h"
 
-//#ifdef AROS
 #include "SDL_cgximage_c.h"
-//#endif
 
 #define CGX_DEBUG
 
@@ -175,7 +173,7 @@ int CGX_GetVideoModes(_THIS)
 	this->hidden->nvisuals = 0;
 	/* Search for the visuals in deepest-first order, so that the first
 	   will be the richest one */
-	//TRAP
+
 	add_visual(this, 32, TrueColor);
 	add_visual(this, 24, TrueColor);
 	add_visual(this, 16, TrueColor);
@@ -348,7 +346,7 @@ int CGX_EnterFullScreen(_THIS)
 		}
 */
     }
-//    CGX_GrabInputNoLock(this, this->input_grab | SDL_GRAB_FULLSCREEN);
+    CGX_GrabInputNoLock(this, this->input_grab | SDL_GRAB_FULLSCREEN);
     return(okay);
 }
 
