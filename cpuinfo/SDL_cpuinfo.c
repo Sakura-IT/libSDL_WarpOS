@@ -382,7 +382,7 @@ static __inline__ int CPU_haveAltiVec(void)
 	{
 		struct TagItem cputags[2] = { {GETINFO_CPU, 0}, {TAG_END,0} };
 		GetInfo(cputags);
-		if ((cputags[0].ti_Data==CPUF_G4) || (cputags[0].ti_Data==(CPUF_G4|CPUF_7410)))
+		if (cputags[0].ti_Data & CPUF_G4)
 		{
 			altivec = 1;
 		}
