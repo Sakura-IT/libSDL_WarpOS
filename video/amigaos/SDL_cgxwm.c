@@ -49,6 +49,7 @@ void CGX_SetIcon(_THIS, SDL_Surface *icon, Uint8 *mask)
 	return;
 }
 
+#if 0 //for appicon. Need Show/HideWindow()
 /**********************************************************************
 	GetTaskName
 **********************************************************************/
@@ -100,6 +101,8 @@ static STRPTR GetTaskName(STRPTR buf, LONG buflen)
 
 	return name;
 }
+
+#endif
 
 void CGX_SetCaption(_THIS, const char *title, const char *icon)
 {
@@ -203,15 +206,14 @@ void CGX_UniconifyWindow(_THIS)
 }
 
 unsigned short InputHandler[] = {
-0x48e7, 0x0030, 0x2448, 0x2649, 0x224a, 0x206b, 0x023c, 0x4a28, 0x00d4, 0x6604, 0x200a, 0x6064,
-0x0c29, 0x0002, 0x0004, 0x6654, 0x0c69, 0x0068, 0x0006, 0x660c, 0x137c, 0x0001, 0x0004,
-0x337c, 0x0080, 0x0006, 0x0c69, 0x00e8, 0x0006, 0x660e, 0x137c, 0x0001, 0x0004, 0x337c, 0x0081, 0006,
-0x602a, 0x0c69, 0x0069, 0x0006, 0x660e, 0x137c, 0x0001, 0x0004, 0x337c, 0x0082, 0x0006, 0x6014,
-0x0c69, 0x006a, 0x0006, 0x660c, 0x137c, 0x0001, 0x0004, 0x337c, 0x0083, 0x0006, 0x2251, 0x2009,
-0x669e, 0x200a, 0x4cdf, 0x0c00, 0x4e75
+0x48e7, 0x0030, 0x2208, 0x2649, 0x2441, 0x206b, 0x023c, 0x4a28, 0x00d4, 0x6752, 0x43ea, 0x0004,
+0x0c11, 0x0002, 0x6642, 0x41ea, 0x0006, 0x0c50, 0x0068, 0x6608, 0x12bc, 0x0001, 0x30bc, 0x0200,
+0x3650, 0xb6fc, 0x00e8, 0x660a, 0x12bc, 0x0001, 0x30bc, 0x0201, 0x601e, 0xb6fc, 0x0069, 0x660a,
+0x12bc, 0x0001, 0x30bc, 0x0202, 0x600e, 0xb6fc, 0x00e9, 0x6608, 0x12bc, 0x0001, 0x30bc, 0x0202,
+0x2452, 0x4a8a, 0x66ae, 0x2001, 0x245f, 0x265f, 0x4e75 
 };
 
-#if 0  //Below is the above 68k code compiled with vc +aos68k -c99 -DWARPOS SDL_cgxwm.c -c -Igg:os-includeppc -Igg:os-includeppc/sdl
+#if 0  //Below is the above 68k code compiled with vc +aos68k -O2 -cpu=68020 -c99 -DWARPOS SDL_cgxwm.c -c -Igg:os-includeppc -Igg:os-includeppc/sdl
 static struct InputEvent *InputHandler(__reg("a0") struct InputEvent *event, __reg("a1") SDL_VideoDevice *this)
 {
    
@@ -229,24 +231,24 @@ static struct InputEvent *InputHandler(__reg("a0") struct InputEvent *event, __r
 		   if (ie->ie_Code == IECODE_LBUTTON)
 		   {
 			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x80;
+			   ie->ie_Code		   = 0x200;
 		   }
 		   
 		   if (ie->ie_Code == (IECODE_LBUTTON | IECODE_UP_PREFIX))
 		   {
 			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x81;
+			   ie->ie_Code		   = 0x201;
 		   }
 
 		   else if (ie->ie_Code == IECODE_RBUTTON)
 		   {
 			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x82;
+			   ie->ie_Code		   = 0x202;
 		   }
-		   else if (ie->ie_Code == IECODE_MBUTTON)
+		   else if (ie->ie_Code == (IECODE_RBUTTON | IECODE_UP_PREFIX))
 		   {
 			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x83;
+			   ie->ie_Code		   = 0x203;
 		   }
 	   }
    }

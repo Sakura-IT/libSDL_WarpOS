@@ -153,12 +153,12 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 			}
 			switch (code)
 			{
-				case 0x80	:
+				case 0x200	:
 				{
 					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_LEFT, 0, 0);
 					break;
 				}
-				case 0x81	:
+				case 0x201	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_LEFT, 0, 0);
 					break;
