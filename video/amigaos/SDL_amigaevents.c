@@ -125,6 +125,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 
 	     case IDCMP_MOUSEBUTTONS:
 			/* Mouse button press? */
+
 			if(!(code&IECODE_UP_PREFIX))
 			{
 				SDL_PrivateMouseButton(SDL_PRESSED, amiga_GetButton(code), 0, 0);
@@ -144,62 +145,73 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 			{
 				extern int skipframe,toggle;
 				
-				if (skipframe==0){skipframe = 1; toggle=1;}
+				if (skipframe==0)
+					{skipframe = 1; toggle=1;}
 				else
-                 {skipframe = 0; toggle=0;}
+                 			{skipframe = 0; toggle=0;}
 				
 			}
 			switch (code)
+			{
+				case 0x80	:
 				{
-					case 0x7a	:
-					case 0x7b	:
+					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_LEFT, 0, 0);
+					break;
+				}
+				case 0x81	:
+				{
+					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_LEFT, 0, 0);
+					break;
+				}
+				case 0x7a	:
+				case 0x7b	:
+				{
+					//if(!(code & IECODE_UP_PREFIX))
 					{
-						//if(!(code & IECODE_UP_PREFIX))
-						{
-							SDL_PrivateMouseButton(SDL_PRESSED,
-								code == 0x7a ? SDL_BUTTON_WHEELUP : SDL_BUTTON_WHEELDOWN, 0, 0);
-						}
-						//else
-						{
-							//code	&= ~IECODE_UP_PREFIX;
-							SDL_PrivateMouseButton(SDL_RELEASED,
-								code == 0x7a ? SDL_BUTTON_WHEELUP : SDL_BUTTON_WHEELDOWN, 0, 0);
-						}
-						break;
+						SDL_PrivateMouseButton(SDL_PRESSED,
+							code == 0x7a ? SDL_BUTTON_WHEELUP : SDL_BUTTON_WHEELDOWN, 0, 0);
 					}
-                }
-             if( !(code&IECODE_UP_PREFIX) )
-		    {
+					//else
+					{
+						//code	&= ~IECODE_UP_PREFIX;
+						SDL_PrivateMouseButton(SDL_RELEASED,
+							code == 0x7a ? SDL_BUTTON_WHEELUP : SDL_BUTTON_WHEELDOWN, 0, 0);
+					}
+					break;
+				}
+                	}
+             		if( !(code&IECODE_UP_PREFIX) )
+		    	{
 				SDL_keysym keysym;
 				posted = SDL_PrivateKeyboard(SDL_PRESSED,
-					amiga_TranslateKey(code,msg->Qualifier, &keysym));
-		    }
-		    else
-		    {
-	    /* Key release? */
+				amiga_TranslateKey(code,msg->Qualifier, &keysym));
+		    	}
+		    	else
+		    	{
+	    		/* Key release? */
 
 				SDL_keysym keysym;
 				code&=~IECODE_UP_PREFIX;
 
 			/* Check to see if this is a repeated key */
-/*			if ( ! X11_KeyRepeat(SDL_Display, &xevent) )  */
+/*				if ( ! X11_KeyRepeat(SDL_Display, &xevent) )  */
 
 				posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code,msg->Qualifier, &keysym));
+				amiga_TranslateKey(code,msg->Qualifier, &keysym));
 					
-			if (SDL_TranslateUNICODE)  // fix when press a key and release qualifier before key.key is repeat endless without that fix
-			{
-				posted = SDL_PrivateKeyboard(SDL_RELEASED,
+				if (SDL_TranslateUNICODE)  // fix when press a key and release qualifier before key.key is repeat endless without that fix
+				{
+					posted = SDL_PrivateKeyboard(SDL_RELEASED,
 					amiga_TranslateKey(code,IEQUALIFIER_RSHIFT, &keysym));	
-				posted = SDL_PrivateKeyboard(SDL_RELEASED,
+					posted = SDL_PrivateKeyboard(SDL_RELEASED,
 					amiga_TranslateKey(code,IEQUALIFIER_RALT, &keysym));
-                posted = SDL_PrivateKeyboard(SDL_RELEASED,
+              				posted = SDL_PrivateKeyboard(SDL_RELEASED,
 					amiga_TranslateKey(code,IEQUALIFIER_CONTROL, &keysym));
-				posted = SDL_PrivateKeyboard(SDL_RELEASED,
+					posted = SDL_PrivateKeyboard(SDL_RELEASED,
 					amiga_TranslateKey(code,0, &keysym));
-            }	
-		    }
-		    break;
+         			}	
+		    	}
+		    	break;
    // code from powersdl (not work when press a key and release qualifier before key.key is repeat endless
 
 
@@ -217,7 +229,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 //						this->hidden->oldqual = qual;
 //					}
 				
-				break;
+			break;
 
 	    /* Have we been resized? */
 	    case IDCMP_NEWSIZE:
@@ -228,23 +240,22 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 
 	    /* Have we been requested to quit? */
 	    case IDCMP_CLOSEWINDOW:
-		posted = SDL_PrivateQuit();
-		break;
+			posted = SDL_PrivateQuit();
+			break;
 
 	    /* Do we need to refresh ourselves? */
 
 	    default: {
 		/* Only post the event if we're watching for it */
-		if ( SDL_ProcessEvents[SDL_SYSWMEVENT] == SDL_ENABLE ) {
-			SDL_SysWMmsg wmmsg;
-			SDL_VERSION(&wmmsg.version);
-			posted = SDL_PrivateSysWMEvent(&wmmsg);
-		}
+			if ( SDL_ProcessEvents[SDL_SYSWMEVENT] == SDL_ENABLE ) {
+				SDL_SysWMmsg wmmsg;
+				SDL_VERSION(&wmmsg.version);
+				posted = SDL_PrivateSysWMEvent(&wmmsg);
+			}
 	    }
 	    break;
 	}
 	ReplyMsg((struct Message *)msg);
-
 
 	return(posted);
 }

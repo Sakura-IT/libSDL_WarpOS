@@ -218,8 +218,8 @@ static SDL_VideoDevice *CGX_CreateDevice(int devindex)
 	}
 	memset(device->hidden, 0, sizeof(*device->hidden));
 	memset(device->gl_data, 0, sizeof(*device->gl_data));
-	if ((device->hidden->WorkbenchPort = CreateMsgPort()) != NULL)
-		device->hidden->WorkbenchSigs = (1 << device->hidden->WorkbenchPort->mp_SigBit);
+	//if ((device->hidden->WorkbenchPort = CreateMsgPort()) != NULL)
+	//	device->hidden->WorkbenchSigs = (1 << device->hidden->WorkbenchPort->mp_SigBit);
 
 	/* Set the driver flags */
 	device->handles_any_size = 1;

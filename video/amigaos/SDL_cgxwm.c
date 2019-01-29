@@ -202,15 +202,115 @@ void CGX_UniconifyWindow(_THIS)
 #endif // ShowWindow unsupported
 }
 
+unsigned short InputHandler[] = {
+0x48e7, 0x0030, 0x2448, 0x2649, 0x224a, 0x206b, 0x023c, 0x4a28, 0x00d4, 0x6604, 0x200a, 0x6064,
+0x0c29, 0x0002, 0x0004, 0x6654, 0x0c69, 0x0068, 0x0006, 0x660c, 0x137c, 0x0001, 0x0004,
+0x337c, 0x0080, 0x0006, 0x0c69, 0x00e8, 0x0006, 0x660e, 0x137c, 0x0001, 0x0004, 0x337c, 0x0081, 0006,
+0x602a, 0x0c69, 0x0069, 0x0006, 0x660e, 0x137c, 0x0001, 0x0004, 0x337c, 0x0082, 0x0006, 0x6014,
+0x0c69, 0x006a, 0x0006, 0x660c, 0x137c, 0x0001, 0x0004, 0x337c, 0x0083, 0x0006, 0x2251, 0x2009,
+0x669e, 0x200a, 0x4cdf, 0x0c00, 0x4e75
+};
+
+#if 0  //Below is the above 68k code compiled with vc +aos68k -c99 -DWARPOS SDL_cgxwm.c -c -Igg:os-includeppc -Igg:os-includeppc/sdl
+static struct InputEvent *InputHandler(__reg("a0") struct InputEvent *event, __reg("a1") SDL_VideoDevice *this)
+{
+   
+   struct InputEvent *ie;
+
+	ie = event;
+ 
+	if (this->hidden->window_active == 0)
+		return event;
+
+   do
+   {
+	   if (ie->ie_Class == IECLASS_RAWMOUSE)
+	   {
+		   if (ie->ie_Code == IECODE_LBUTTON)
+		   {
+			   ie->ie_Class		   = IECLASS_RAWKEY;
+			   ie->ie_Code		   = 0x80;
+		   }
+		   
+		   if (ie->ie_Code == (IECODE_LBUTTON | IECODE_UP_PREFIX))
+		   {
+			   ie->ie_Class		   = IECLASS_RAWKEY;
+			   ie->ie_Code		   = 0x81;
+		   }
+
+		   else if (ie->ie_Code == IECODE_RBUTTON)
+		   {
+			   ie->ie_Class		   = IECLASS_RAWKEY;
+			   ie->ie_Code		   = 0x82;
+		   }
+		   else if (ie->ie_Code == IECODE_MBUTTON)
+		   {
+			   ie->ie_Class		   = IECLASS_RAWKEY;
+			   ie->ie_Code		   = 0x83;
+		   }
+	   }
+   }
+   while ((ie = ie->ie_NextEvent) != NULL);
+
+   return event;
+}
+#endif
+
+static struct Interrupt	Handler		= { { NULL, NULL, 0, 55, "WarpOS SDL Input Lock" }, NULL, (VOID (*)())&InputHandler };
+static struct IOStdReq *ioreq 		= NULL;
+
 static void CGX_LockInput(_THIS)
 {
-   this->hidden->grabbing_input = 1;
+   if (ioreq == NULL)
+   {
+	   struct IOStdReq *req;
+	   struct MsgPort  *port;
+
+	   port = CreateMsgPort();
+	   req = (struct IOStdReq *)CreateIORequest(port, sizeof(*req));
+
+	   if (req)
+	   {
+		   if (OpenDevice("input.device", 0, (struct IORequest *)req, 0) == 0)
+		   {
+			   ioreq   = req;
+
+			   // Lock mouse
+
+			   this->hidden->grabbing_input = 1;
+
+			   Handler.is_Data = this;
+			   req->io_Command = IND_ADDHANDLER;
+			   req->io_Data = &Handler;
+			   DoIO((struct IORequest *)req);
+			   return;
+		   }
+	   }
+	   DeleteIORequest(req);
+	   DeleteMsgPort(port);
+   }
 }
+
 
 static void CGX_UnlockInput(_THIS)
 {
    this->hidden->grabbing_input = 0;
    this->hidden->should_grab_input = 0;
+
+   if (ioreq)
+   {
+	   struct IOStdReq *req	   = ioreq;
+	   struct MsgPort  *port   = req->io_Message.mn_ReplyPort;
+
+	   ioreq = NULL;
+
+	   req->io_Command = IND_REMHANDLER;
+	   DoIO((struct IORequest *)req);
+
+	   CloseDevice((struct IORequest *)req);
+	   DeleteIORequest((struct IORequest *)req);
+	   DeleteMsgPort(port);
+   }
 }
 
 SDL_GrabMode CGX_GrabInputNoLock(_THIS, SDL_GrabMode mode)
