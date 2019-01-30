@@ -156,12 +156,30 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 				case 0x200	:
 				{
 					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_LEFT, 0, 0);
-					break;
+					ReplyMsg((struct Message *)msg);
+					return(posted);
+
 				}
 				case 0x201	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_LEFT, 0, 0);
-					break;
+					ReplyMsg((struct Message *)msg);
+					return(posted);
+
+				}
+				case 0x202	:
+				{
+					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_RIGHT, 0, 0);
+					ReplyMsg((struct Message *)msg);
+					return(posted);
+
+				}
+				case 0x203	:
+				{
+					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_RIGHT, 0, 0);
+					ReplyMsg((struct Message *)msg);
+					return(posted);
+
 				}
 				case 0x7a	:
 				case 0x7b	:
