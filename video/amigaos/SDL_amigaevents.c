@@ -121,7 +121,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 						msg->MouseY-SDL_Window->BorderTop);
 				}
 			}
-	    	break;
+	    		break;
 
 	     case IDCMP_MOUSEBUTTONS:
 			/* Mouse button press? */

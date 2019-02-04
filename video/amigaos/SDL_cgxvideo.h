@@ -139,6 +139,7 @@ struct SDL_PrivateVideoData {
 
     ULONG grabbing_input;
     ULONG should_grab_input;
+    struct IntuitionBase *IntuiBase;
 
     /* Workbench related */
 

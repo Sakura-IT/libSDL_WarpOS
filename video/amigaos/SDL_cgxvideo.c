@@ -484,6 +484,8 @@ static int CGX_VideoInit(_THIS, SDL_PixelFormat *vformat)
 		}
 	}
 
+	this->hidden->IntuiBase = IntuitionBase;
+
 // check if P96 is present and if we don't need the fix
 #ifndef AROS
     test = getenv("USE_P96_FIX");
@@ -869,15 +871,10 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 		}
 	} 
 
-	if(findlib("pci.library")){
-		if(findlib("Radeon.card")||findlib("Voodoo.card")) {
-				this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
-		}
-	} 
-	
-	if(findlib("trance.library")){
+	if(!findlib("CVisionPPC") && !findlib("BVisionPPC"))
+	{
 		this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
-	}
+	} 
 				
 	this->hidden->BytesPerPixel=GetCyberMapAttr(SDL_Window->RPort->BitMap,CYBRMATTR_BPPIX);
 
