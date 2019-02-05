@@ -685,7 +685,7 @@ void CGX_DestroyWindow(_THIS, SDL_Surface *screen)
 }
 
 static void CGX_SetSizeHints(_THIS, int w, int h, Uint32 flags)
-{
+{	
 	if ( flags & SDL_RESIZABLE ) {
 		WindowLimits(SDL_Window, 32, 32,4096,4096);
 	} else {
@@ -708,9 +708,7 @@ static void CGX_SetSizeHints(_THIS, int w, int h, Uint32 flags)
 struct Library *findlib(char *name)
 {
 	struct Library *lib;
-	Forbid();
 	lib = (struct Library *)FindName(&SysBase->LibList, name);
-	Permit();
 	return(lib);
 }
 
@@ -826,10 +824,10 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			if( flags & SDL_FULLSCREEN )
 			{
 				SDL_Window = OpenWindowTags(NULL,WA_Width,w,WA_Height,h,
-											WA_Flags,WFLG_ACTIVATE|WFLG_RMBTRAP|WFLG_BORDERLESS|WFLG_BACKDROP|WFLG_REPORTMOUSE,
-											WA_IDCMP,idcmp,
-											WA_CustomScreen,(ULONG)SDL_Display,
-											TAG_DONE);
+								WA_Flags,WFLG_ACTIVATE|WFLG_RMBTRAP|WFLG_BORDERLESS|WFLG_BACKDROP|WFLG_REPORTMOUSE,
+								WA_IDCMP,idcmp,
+								WA_CustomScreen,(ULONG)SDL_Display,
+								TAG_DONE);
 
 				D(bug("Opening backdrop window %ldx%ld on display %lx!\n",w,h,SDL_Display));
 			}
@@ -842,11 +840,13 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 //				}
 
 				SDL_Window = OpenWindowTags(NULL,WA_InnerWidth,w,WA_InnerHeight,h,
-											WA_Flags,WFLG_REPORTMOUSE|WFLG_ACTIVATE|WFLG_RMBTRAP | ((flags&SDL_NOFRAME) ? 0 : (WFLG_DEPTHGADGET|WFLG_CLOSEGADGET|WFLG_DRAGBAR | ((flags&SDL_RESIZABLE) ? WFLG_SIZEGADGET|WFLG_SIZEBBOTTOM : 0))),
-											WA_IDCMP,idcmp|IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE,
-											WA_PubScreen,(ULONG)SDL_Display,
-											WA_GimmeZeroZero, gzz,
-														TAG_DONE);
+								WA_Flags,WFLG_REPORTMOUSE|WFLG_ACTIVATE|WFLG_RMBTRAP |
+								((flags&SDL_NOFRAME) ? 0 : (WFLG_DEPTHGADGET|WFLG_CLOSEGADGET|WFLG_DRAGBAR |
+								((flags&SDL_RESIZABLE) ? WFLG_SIZEGADGET|WFLG_SIZEBBOTTOM : 0))),
+								WA_IDCMP,idcmp|IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE,
+								WA_PubScreen,(ULONG)SDL_Display,
+								WA_GimmeZeroZero, gzz,
+								TAG_DONE);
 				D(bug("Opening WB window of size: %ldx%ld!\n",w,h));
 			}
 
