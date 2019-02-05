@@ -43,7 +43,7 @@
 #define INVALID_SET_FILE_POINTER 0xFFFFFFFF
 #endif
 
-#define READAHEAD_BUFFER_SIZE	1024
+#define READAHEAD_BUFFER_SIZE	1024*64
 
 static int SDLCALL win32_file_open(SDL_RWops *context, const char *filename, const char *mode)
 {

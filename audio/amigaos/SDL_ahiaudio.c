@@ -133,11 +133,7 @@ AudioBootStrap AHI_bootstrap = {
 
 void static AHI_WaitAudio(_THIS)
 {
-	if(!CheckIO((struct IORequest *)audio_req[current_buffer]))
-	{
-		WaitIO((struct IORequest *)audio_req[current_buffer]);
-//		AbortIO((struct IORequest *)audio_req[current_buffer]);
-	}
+	WaitIO((struct IORequest *)audio_req[current_buffer]);
 }
 
 static void AHI_PlayAudio(_THIS)
@@ -187,15 +183,14 @@ static void AHI_CloseAudio(_THIS)
 		AbortIO((struct IORequest *)audio_req[0]);
 		WaitIO((struct IORequest *)audio_req[0]);
 
+// Double abort to be sure to break the dbuffering process.
+
 		if(audio_req[1] && playing>1)
 		{
 			D(bug("Break AGAIN req[1]...\n"));
 			AbortIO((struct IORequest *)audio_req[1]);
 			WaitIO((struct IORequest *)audio_req[1]);
 		}
-// Double abort to be sure to break the dbuffering process.
-
-		
 
 		D(bug("Reqs breaked, closing device...\n"));
 		CloseDevice((struct IORequest *)audio_req[0]);
@@ -205,7 +200,7 @@ static void AHI_CloseAudio(_THIS)
 		DeleteIORequest((struct IORequest *)audio_req[0]);
 		audio_req[0]=audio_req[1]=NULL;
 
-		SDL_Delay(49); // wait 60 ms to be safe
+		SDL_Delay(40); // wait 40 ms to be safe
 	}
 
 	playing=0;
@@ -213,14 +208,12 @@ static void AHI_CloseAudio(_THIS)
 	D(bug("Freeing mixbuf[0]...\n"));
 	if ( mixbuf[0] != NULL ) {
 		myfree(mixbuf[0]);
-//		SDL_FreeAudioMem(mixbuf[0]);
 		mixbuf[0] = NULL;
 	}
 
 	D(bug("Freeing mixbuf[1]...\n"));
 	if ( mixbuf[1] != NULL ) {
 		myfree(mixbuf[1]);
-//		SDL_FreeAudioMem(mixbuf[1]);
 		mixbuf[1] = NULL;
 	}
 
@@ -235,15 +228,9 @@ static void AHI_CloseAudio(_THIS)
 
 static int AHI_OpenAudio(_THIS, SDL_AudioSpec *spec)
 {
-//	int width;
 
 	D(bug("AHI opening...\n"));
-/*    if (spec->channels > 2)
-	{
-		D(bug("More than 2 channels not currently supported, forcing conversion...\n"));
-		spec->channels = 2;
-	}
-*/
+
 	/* Determine the audio parameters from the AudioSpec */
 	switch ( spec->format & 0xFF ) {
 

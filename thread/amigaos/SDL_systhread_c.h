@@ -73,6 +73,9 @@ extern struct DosLibrary *DOSBase;
 #undef AllocSignal
 #undef FreeSignal
 #undef ObtainSemaphoreShared
+#undef REMOVE
+#undef NEWLIST
+#undef ADDTAIL
 
 #define Signal SignalPPC
 #define Wait WaitPPC
@@ -87,6 +90,9 @@ extern struct DosLibrary *DOSBase;
 #define AllocSignal AllocSignalPPC
 #define FreeSignal FreeSignalPPC
 #define ObtainSemaphoreShared ObtainSemaphoreSharedPPC
+#define REMOVE RemovePPC
+#define NEWLIST NewListPPC
+#define ADDTAIL AddTailPPC
 #else
 
 #define SYS_ThreadHandle struct Task *

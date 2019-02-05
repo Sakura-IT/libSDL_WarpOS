@@ -147,7 +147,7 @@ int SDL_RunAudio(void *audiop)
 		audio->ThreadInit(audio);
 	}
 	audio->threadid = SDL_ThreadID();
-    SetTaskPri(audio->threadid,11);
+
 	/* Set up the mixing function */
 	fill  = audio->spec.callback;
 	udata = audio->spec.userdata;
@@ -696,7 +696,6 @@ void SDL_AudioQuit(void)
 		/* Free the driver data */
 		if( audio->free )
 			audio->free(audio);
-		//free(audio);
 		current_audio = NULL;
 	}
 }

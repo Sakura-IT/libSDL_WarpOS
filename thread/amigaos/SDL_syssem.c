@@ -70,7 +70,7 @@ SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
 		memset(&sem->sem, 0, sizeof(sem->sem));
 		InitSemaphore(&sem->sem);
 
-		NEWLIST(&sem->waitlist);
+		NEWLIST((struct List *)&sem->waitlist);
 
 		sem->sem_value = initial_value;
 	}
@@ -192,7 +192,7 @@ int SDL_SemWait(SDL_sem *sem)
 			}
 			wn.sigmask = 1 << signal;
 
-			ADDTAIL(&sem->waitlist, &wn);
+			ADDTAIL((struct List *)&sem->waitlist, (struct Node *)&wn);
 		}
 
 		D(bug("[SDL] SDL_SemWait(): waiting for semaphore... \n"));
@@ -213,7 +213,7 @@ int SDL_SemWait(SDL_sem *sem)
 
 	if (signal != -1)
 	{
-		REMOVE(&wn);
+		REMOVE((struct Node *)&wn);
 
 		if (signal != FALLBACKSIGNAL)
 		{
@@ -277,7 +277,7 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
 			}
 			wn.sigmask = 1 << signal;
 
-			ADDTAIL(&sem->waitlist, &wn);
+			ADDTAIL((struct List *)&sem->waitlist, (struct Node *)&wn);
 		}
 
 		ReleaseSemaphore(&sem->sem);
@@ -308,7 +308,7 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
 
 	if (signal != -1)
 	{
-		REMOVE(&wn);
+		REMOVE((struct Node *)&wn);
 
 		if (signal != FALLBACKSIGNAL)
 		{

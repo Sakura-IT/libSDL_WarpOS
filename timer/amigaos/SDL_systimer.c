@@ -352,17 +352,23 @@ static int RunTimer(void *unused)
 {
 	D(bug("SYSTimer: Entering RunTimer loop..."));
 
+#ifndef WARPOS
 	if(GfxBase==NULL)
 		GfxBase=(struct GfxBase *)OpenLibrary("graphics.library",37);
+#endif
 
 	while ( timer_alive ) {
 		if ( SDL_timer_running ) {
 			SDL_ThreadedTimerCheck();
 		}
+#ifndef WARPOS
 		if(GfxBase)
 			WaitTOF();  // Check the timer every fifth of seconds. Was SDL_Delay(1)->BusyWait!
 		else
 			Delay(1);
+#else
+		WaitTime(0, 20000); // Wait 20000 microseconds = 20 milliseconds = 1/50s
+#endif
 	}
 	D(bug("SYSTimer: EXITING RunTimer loop..."));
 	return(0);
