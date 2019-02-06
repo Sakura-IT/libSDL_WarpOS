@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -191,12 +191,6 @@ extern DECLSPEC int SDLCALL SDL_CDEject(SDL_CD *cdrom);
 
 /** Closes the handle for the CD-ROM drive */
 extern DECLSPEC void SDLCALL SDL_CDClose(SDL_CD *cdrom);
-
-/** Gets the volume of the 2 stereo channels */
-extern DECLSPEC int SDLCALL SDL_CDGetVolume(SDL_CD *cdrom, int *vol0, int *vol1);
-
-/** Sets the volume of the 2 stereo channels */
-extern DECLSPEC int SDLCALL SDL_CDSetVolume(SDL_CD *cdrom, int vol0, int vol1);
 
 
 /* Ends C function definitions when using C++ */

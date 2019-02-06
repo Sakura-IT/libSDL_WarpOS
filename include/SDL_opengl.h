@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -42,11 +42,13 @@
 #elif defined(__MACOS__)
 #include <gl.h>		/* Header File For The OpenGL Library */
 #include <glu.h>	/* Header File For The GLU Library */
+#elif defined(__MORPHOS__)
+#include <proto/tinygl.h>
+#include <tgl/gl.h>
+#include <tgl/glu.h>
 #else
-#pragma pack(2)
-#include <mgl/gl.h>	/* Header File For The OpenGL Library */
-#pragma pack()
-//#include <GL/glu.h>	/* Header File For The GLU Library */
+#include <GL/gl.h>	/* Header File For The OpenGL Library */
+#include <GL/glu.h>	/* Header File For The GLU Library */
 #endif
 #ifndef NO_SDL_GLEXT
 #undef __glext_h_
@@ -3105,30 +3107,40 @@ extern "C" {
 #include <stddef.h>
 #ifndef GL_VERSION_2_0
 /* GL type for program/shader text */
+#ifndef GL_H
 typedef char GLchar;			/* native character */
+#endif
 #endif
 
 #ifndef GL_VERSION_1_5
 /* GL types for handling large vertex buffer objects */
+#ifndef GL_H
 typedef ptrdiff_t GLintptr;
 typedef ptrdiff_t GLsizeiptr;
+#endif
 #endif
 
 #ifndef GL_ARB_vertex_buffer_object
 /* GL types for handling large vertex buffer objects */
+#ifndef GL_H
 typedef ptrdiff_t GLintptrARB;
 typedef ptrdiff_t GLsizeiptrARB;
+#endif
 #endif
 
 #ifndef GL_ARB_shader_objects
 /* GL types for handling shader object handles and program/shader text */
+#ifndef GL_H
 typedef char GLcharARB;		/* native character */
 typedef unsigned int GLhandleARB;	/* shader object handle */
+#endif
 #endif
 
 /* GL types for "half" precision (s10e5) float data in host memory */
 #ifndef GL_ARB_half_float_pixel
+#ifndef GL_H
 typedef unsigned short GLhalfARB;
+#endif
 #endif
 
 #ifndef GL_NV_half_float

@@ -25,9 +25,9 @@
 
 #include "SDL_platform.h"
 
-#pragma pack(2)
+#pragma pack(push,2)
 #include <exec/types.h>
-#pragma pack()
+#pragma pack(pop)
 
  
 /* This is a set of defines to configure the SDL features */
@@ -148,7 +148,7 @@
 
 //#define SDL_VIDEO_OPENGL	1 
 
-//#undef SDL_VIDEO_OPENGL
+#undef SDL_VIDEO_OPENGL
 
 //#define SDL_AUDIO_DISABLED 0
 
