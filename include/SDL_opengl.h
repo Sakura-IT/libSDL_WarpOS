@@ -42,10 +42,10 @@
 #elif defined(__MACOS__)
 #include <gl.h>		/* Header File For The OpenGL Library */
 #include <glu.h>	/* Header File For The GLU Library */
-#elif defined(__MORPHOS__)
-#include <proto/tinygl.h>
-#include <tgl/gl.h>
-#include <tgl/glu.h>
+#elif defined(WARPUP)
+#pragma pack(push,2)
+#include <mgl/gl.h>	/* Header File For The OpenGL Library */
+#pragma pack(pop)
 #else
 #include <GL/gl.h>	/* Header File For The OpenGL Library */
 #include <GL/glu.h>	/* Header File For The GLU Library */
