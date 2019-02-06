@@ -1,29 +1,25 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2010 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
+    This library is SDL_free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+    Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Sam Lantinga
     slouken@libsdl.org
 */
-
-#ifdef SAVE_RCSID
-static char rcsid =
- "@(#) $Id$";
-#endif
+#include "SDL_config.h"
 
 /* This is the system specific header for the SDL CD-ROM API */
 
@@ -63,12 +59,6 @@ extern struct CDcaps {
 
 	/* Close the specified drive */
 	void (*Close)(SDL_CD *cdrom);
-
-	/* Get CD volume */
-	int (*GetVolume)(SDL_CD *cdrom, int *vol0, int *vol1);
-
-	/* Set CD volume */
-	int (*SetVolume)(SDL_CD *cdrom, int vol0, int vol1);
 } SDL_CDcaps;
 
 /* The number of available CD-ROM drives on the system */
