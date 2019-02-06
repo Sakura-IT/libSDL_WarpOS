@@ -45,6 +45,8 @@ struct CDcaps SDL_CDcaps = {
 	NULL,					/* Stop */
 	NULL,					/* Eject */
 	NULL,					/* Close */
+	NULL,					/* GetVolume */
+	NULL,					/* SetVolume */
 };
 int SDL_numcds;
 
@@ -86,6 +88,24 @@ int SDL_CDNumDrives(void)
 		return(-1);
 	}
 	return(SDL_numcds);
+}
+
+int SDL_CDGetVolume(SDL_CD *cdrom, int *vol0, int *vol1)
+{
+	if ( ! CheckInit(1, &cdrom) ) {
+		return(-1);
+	}
+	
+	return SDL_CDcaps.GetVolume(cdrom, vol0, vol1);
+}
+
+int SDL_CDSetVolume(SDL_CD *cdrom, int vol0, int vol1)
+{
+	if ( ! CheckInit(1, &cdrom) ) {
+		return(-1);
+	}
+	
+	return SDL_CDcaps.SetVolume(cdrom, vol0, vol1);
 }
 
 const char *SDL_CDName(int drive)
