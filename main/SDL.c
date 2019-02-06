@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,6 @@
 #if !SDL_VIDEO_DISABLED
 #include "video/SDL_leaks.h"
 #endif
-#include "mydebug.h"
 
 #if SDL_THREAD_PTH
 #include <pth.h>
@@ -65,51 +64,6 @@ int surfaces_allocated = 0;
 
 int SDL_InitSubSystem(Uint32 flags)
 {
-#ifndef NO_AMIGADEBUG
-	fprintf(stderr,"SDL: Before Video Init\n");
-#endif
-
-#if !SDL_VIDEO_DISABLED
-	/* Initialize the video/event subsystem */
-	if ( (flags & SDL_INIT_VIDEO) && !(SDL_initialized & SDL_INIT_VIDEO) ) {
-		if ( SDL_VideoInit(SDL_getenv("SDL_VIDEODRIVER"),
-		                   (flags&SDL_INIT_EVENTTHREAD)) < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_VIDEO;
-	}
-#else
-	if ( flags & SDL_INIT_VIDEO ) {
-		SDL_SetError("SDL not built with video support");
-		return(-1);
-	}
-#endif
-
-#ifndef NO_AMIGADEBUG
-	fprintf(stderr,"SDL: After Video Init\n");
-#endif
-
-#if !SDL_AUDIO_DISABLED
-	/* Initialize the audio subsystem */
-	if ( (flags & SDL_INIT_AUDIO) && !(SDL_initialized & SDL_INIT_AUDIO) ) {
-		if ( SDL_AudioInit(SDL_getenv("SDL_AUDIODRIVER")) < 0 ) {
-			return(-1);
-		}
-		SDL_initialized |= SDL_INIT_AUDIO;
-	}
-#else
-	if ( flags & SDL_INIT_AUDIO ) {
-		SDL_SetError("SDL not built with audio support");
-		return(-1);
-	}
-#endif
-
-	D(bug("test"));
-#ifndef NO_AMIGADEBUG
-	fprintf(stderr,"SDL: After Audio Init\n");
-#endif
-
-
 #if !SDL_TIMERS_DISABLED
 	/* Initialize the timer subsystem */
 	if ( ! ticks_started ) {
@@ -129,10 +83,36 @@ int SDL_InitSubSystem(Uint32 flags)
 	}
 #endif
 
-#ifndef NO_AMIGADEBUG
-	fprintf(stderr,"SDL: After Timer Init\n");
+#if !SDL_VIDEO_DISABLED
+	/* Initialize the video/event subsystem */
+	if ( (flags & SDL_INIT_VIDEO) && !(SDL_initialized & SDL_INIT_VIDEO) ) {
+		if ( SDL_VideoInit(SDL_getenv("SDL_VIDEODRIVER"),
+		                   (flags&SDL_INIT_EVENTTHREAD)) < 0 ) {
+			return(-1);
+		}
+		SDL_initialized |= SDL_INIT_VIDEO;
+	}
+#else
+	if ( flags & SDL_INIT_VIDEO ) {
+		SDL_SetError("SDL not built with video support");
+		return(-1);
+	}
 #endif
 
+#if !SDL_AUDIO_DISABLED
+	/* Initialize the audio subsystem */
+	if ( (flags & SDL_INIT_AUDIO) && !(SDL_initialized & SDL_INIT_AUDIO) ) {
+		if ( SDL_AudioInit(SDL_getenv("SDL_AUDIODRIVER")) < 0 ) {
+			return(-1);
+		}
+		SDL_initialized |= SDL_INIT_AUDIO;
+	}
+#else
+	if ( flags & SDL_INIT_AUDIO ) {
+		SDL_SetError("SDL not built with audio support");
+		return(-1);
+	}
+#endif
 
 #if !SDL_JOYSTICK_DISABLED
 	/* Initialize the joystick subsystem */
@@ -205,12 +185,6 @@ void SDL_QuitSubSystem(Uint32 flags)
 		SDL_initialized &= ~SDL_INIT_JOYSTICK;
 	}
 #endif
-#if !SDL_TIMERS_DISABLED
-	if ( (flags & SDL_initialized & SDL_INIT_TIMER) ) {
-		SDL_TimerQuit();
-		SDL_initialized &= ~SDL_INIT_TIMER;
-	}
-#endif
 #if !SDL_AUDIO_DISABLED
 	if ( (flags & SDL_initialized & SDL_INIT_AUDIO) ) {
 		SDL_AudioQuit();
@@ -221,6 +195,12 @@ void SDL_QuitSubSystem(Uint32 flags)
 	if ( (flags & SDL_initialized & SDL_INIT_VIDEO) ) {
 		SDL_VideoQuit();
 		SDL_initialized &= ~SDL_INIT_VIDEO;
+	}
+#endif
+#if !SDL_TIMERS_DISABLED
+	if ( (flags & SDL_initialized & SDL_INIT_TIMER) ) {
+		SDL_TimerQuit();
+		SDL_initialized &= ~SDL_INIT_TIMER;
 	}
 #endif
 }
@@ -240,7 +220,7 @@ void SDL_Quit(void)
   printf("[SDL_Quit] : Enter! Calling QuitSubSystem()\n"); fflush(stdout);
 #endif
 	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
- 
+
 #ifdef CHECK_LEAKS
 #ifdef DEBUG_BUILD
   printf("[SDL_Quit] : CHECK_LEAKS\n"); fflush(stdout);
@@ -251,7 +231,7 @@ void SDL_Quit(void)
 		fprintf(stderr, "SDL Warning: %d SDL surfaces extant\n", 
 							surfaces_allocated);
 	}
-#endif 
+#endif
 #ifdef DEBUG_BUILD
   printf("[SDL_Quit] : SDL_UninstallParachute()\n"); fflush(stdout);
 #endif
@@ -265,8 +245,7 @@ void SDL_Quit(void)
 #ifdef DEBUG_BUILD
   printf("[SDL_Quit] : Returning!\n"); fflush(stdout);
 #endif
-    
-//    amiga_quit_timer();  //amigaos add
+
 }
 
 /* Return the library version number */
