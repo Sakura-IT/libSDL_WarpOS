@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -327,7 +327,7 @@ size_t SDL_strlen(const char *string)
 
 #ifndef HAVE_STRLCPY
 size_t SDL_strlcpy(char *dst, const char *src, size_t maxlen)
-{ 
+{
     size_t srclen = SDL_strlen(src);
     if ( maxlen > 0 ) {
         size_t len = SDL_min(srclen, maxlen-1);
@@ -561,11 +561,9 @@ char *SDL_lltoa(Sint64 value, char *string, int radix)
         value = -value;
     }
     if ( value ) {
-		int i=0;
         while ( value > 0 ) {
             *bufp++ = ntoa_table[value % radix];
             value /= radix;
-			i++;
         }
     } else {
         *bufp++ = '0';
@@ -1045,7 +1043,7 @@ static size_t SDL_PrintLongLong(char *text, Sint64 value, int radix, size_t maxl
 {
     char num[130];
     size_t size;
-    
+
     SDL_lltoa(value, num, radix);
     size = SDL_strlen(num);
     if ( size >= maxlen ) {

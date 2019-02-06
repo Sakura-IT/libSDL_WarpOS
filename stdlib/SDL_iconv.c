@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -383,7 +383,7 @@ size_t SDL_iconv(SDL_iconv_t cd,
 						*/
 						ch = UNKNOWN_UNICODE;
 					} else {
-						if ( (p[0] & 0xCE) == 0xC0 ) {
+						if ( (p[0] & 0xDE) == 0xC0 ) {
 							overlong = SDL_TRUE;
 						}
 						ch = (Uint32)(p[0] & 0x1F);
@@ -828,7 +828,7 @@ char *SDL_iconv_string(const char *tocode, const char *fromcode, const char *inb
 			tocode = "UTF-8";
 		}
 		if ( !fromcode || !*fromcode ) {
-			tocode = "UTF-8";
+			fromcode = "UTF-8";
 		}
 		cd = SDL_iconv_open(tocode, fromcode);
 	}

@@ -1,7 +1,7 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
- 
+    Copyright (C) 1997-2012 Sam Lantinga
+
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
@@ -4908,7 +4908,7 @@ int mspace_mallopt(int param_number, int value) {
       return sbrk_top;
     }
   }
- 
+
   // cleanup any allocated memory pools
   // called as last thing before shutting down driver
 
