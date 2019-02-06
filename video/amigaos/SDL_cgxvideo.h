@@ -36,7 +36,7 @@ static char rcsid =
 #include <string.h>
 
 #if defined(WARPOS)
-#pragma pack(2)
+#pragma pack(push,2)
 #endif
 
 #include <exec/exec.h>
@@ -58,7 +58,7 @@ static char rcsid =
 #include <inline/console.h>
 #endif
 
-#pragma pack()
+#pragma pack(pop)
 
 #include "../../mydebug.h"
 #include "SDL_mouse.h"
@@ -71,17 +71,16 @@ static char rcsid =
 
 /* Private display data */
 struct SDL_PrivateVideoData {
-    struct Screen *Public_Display; /* Used for events and window management */
-    struct Screen *GFX_Display;	/* Used for graphics and colormap stuff */
-    Uint32 SDL_VisualUnused;		/* The visual used by our window */
-    struct Window *SDL_Window;	/* Shared by both displays (no X security?) */
-    unsigned char *BlankCursor;	/* The invisible cursor */
-
-    char *SDL_windowid;		/* Flag: true if we have been passed a window */
+    struct Screen *Public_Display;		/* Used for events and window management */
+    struct Screen *GFX_Display;			/* Used for graphics and colormap stuff */
+    Uint32 SDL_VisualUnused;			/* The visual used by our window */
+    struct Window *SDL_Window;			/* Shared by both displays (no X security?) */
+    unsigned char *BlankCursor;			/* The invisible cursor */
+    char *SDL_windowid;				/* Flag: true if we have been passed a window */
 
     /* The variables used for displaying graphics */
-    Uint8 *Ximage;		/* The X image for our window */
-    int swap_pixels;		/* Flag: true if display is swapped endian */
+    Uint8 *Ximage;				/* The X image for our window */
+    int swap_pixels;				/* Flag: true if display is swapped endian */
 
     /* The current width and height of the fullscreen mode */
     int current_w;
@@ -105,13 +104,12 @@ struct SDL_PrivateVideoData {
     /* available visuals of interest to us, sorted deepest first */
     struct {
 		Uint32 visual;
-		int depth;		/* number of significant bits/pixel */
-		int bpp;		/* pixel quantum in bits */
-    } visuals[5];		/* at most entries for 8, 15, 16, 24 32 */
+		int depth;			/* number of significant bits/pixel */
+		int bpp;			/* pixel quantum in bits */
+    } visuals[5];				/* at most entries for 8, 15, 16, 24 32 */
     int nvisuals;
-
-    Uint32 vis;		/* current visual in use */
-    int depth;			/* current visual depth (not bpp) */
+    Uint32 vis;					/* current visual in use */
+    int depth;					/* current visual depth (not bpp) */
     int BytesPerPixel;
     int currently_fullscreen,same_format,dbuffer;
 
@@ -124,43 +122,34 @@ struct SDL_PrivateVideoData {
 
     /* Colormap handling */
     LONG Pens;
-    Sint32 *XPixels;		/* A list of pixels that have been allocated, the size depends on the screen format */
+    Sint32 *XPixels;				/* A list of pixels that have been allocated, the size depends on the screen format */
 	struct ScreenBuffer *SB[2];
 	struct RastPort *RP;
-    short *iconcolors;		/* List of colors used by the icon */
+    short *iconcolors;				/* List of colors used by the icon */
 	int swap_bytes;
 	struct Window *SDL_Window_Background;
     struct BitMap *bmap;
     Uint32 oldqual,oldkey; 
-    UBYTE window_active;
+    ULONG window_active;
     APTR WindowCursor;
 
     /* Grab input */
-
     ULONG grabbing_input;
     ULONG should_grab_input;
     struct IntuitionBase *IntuiBase;
 
     /* Workbench related */
-
     struct AppIcon    *AppIcon;
     struct DiskObject *DiskObj;
     struct MsgPort    *WorkbenchPort;
     ULONG             WorkbenchSigs;
 
     /* Additional HW overlay information */
-
     void *overlay;
     ULONG overlay_attached, overlay_colorkey;
     ULONG overlay_left, overlay_top;
     ULONG overlay_right, overlay_bottom;
     SDL_Rect overlay_rect;
-
-    /* additions for AMMX version */
-    UBYTE dbscrollscreen;  /* use scrolling screen instead of screen buffer swap (Vampire/Apollo) */
-    UWORD dbpos;	   /* current screen position (vertical, scrolled) */
-    UWORD dbheight;        /* height of double buffer (half of total screen height) */
-    struct BitMap dbitmap; /* custom bitmap for double buffering */
 };
 
 /* Old variable names */

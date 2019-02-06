@@ -385,34 +385,10 @@ int CGX_FlipHWSurface(_THIS, SDL_Surface *surface)
 	//SDL_UpdateRect(surface, 0, 0, 0, 0);
 	//surface->hwdata->bmap=SDL_RastPort->BitMap=this->hidden->SB[current]->sb_BitMap;
 	//current^=1;
-	 if( this->hidden->dbscrollscreen == 1 )
-	 {
-	 	struct BitMap *bm;
-
-//		this->hidden->dbpos ^= this->hidden->dbheight; /* swap positions */
-		if( this->hidden->dbpos )
-			this->hidden->dbpos =  0;
-		else	this->hidden->dbpos = 1;
-
-		bm = &this->hidden->dbitmap; 
-		if( this->hidden->dbpos ) /* if lower portion is shown, use regular screen buffer */
-			bm = SDL_Display->RastPort.BitMap;
-
-		surface->hwdata->bmap=bm;//SDL_RastPort->BitMap=bm;
-
-//		ScreenPosition( SDL_Display, SPOS_ABSOLUTE, 0, this->hidden->dbpos, 0, 0 );
-//		WaitBOVP(&SDL_Display->ViewPort);
-		SDL_Display->ViewPort.RasInfo->RyOffset = ( this->hidden->dbpos ) ? 1 : 0;
-		ScrollVPort(&SDL_Display->ViewPort);
-
-		printf("SCROLLING %d (%d)\n",this->hidden->dbpos,SDL_Display->Height);
-	 }
-	 else /* dbscrollscreen */
-	 {
+	
 		if(!SafeChange)
 		{ 
 			Wait(disp_sigbit);
-
 			while(GetMsg(dispport)!=NULL)
 				;
 			SafeChange=TRUE;
@@ -421,24 +397,23 @@ int CGX_FlipHWSurface(_THIS, SDL_Surface *surface)
 	        ret = ChangeScreenBuffer(SDL_Display,this->hidden->SB[current^1]);
 	   
 		{
-			surface->hwdata->bmap=SDL_RastPort->BitMap=this->hidden->SB[current]->sb_BitMap;
-			SafeChange=FALSE;
-			SafeDisp=FALSE;
-			current^=1;
+		surface->hwdata->bmap=SDL_RastPort->BitMap=this->hidden->SB[current]->sb_BitMap;
+		SafeChange=FALSE;
+		SafeDisp=FALSE;
+		current^=1;
 		}
 		D(bug("After change\n"));
 		
 		if(!SafeDisp)
 		{
 			Wait(safe_sigbit);
-			while(GetMsg(safeport)!=NULL)
+			while(GetMsg(safeport)!=NULL)				
 				;
 			SafeDisp=TRUE;
 		}
 		//SDL_Delay(1);
 		D(bug("After change 2\n"));
-	 } /* dbscrollscreen */
-	}
+		}
 	return(0);
 }
 
