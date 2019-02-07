@@ -4,9 +4,9 @@
 */
 #define SDL_PROC_UNUSED(ret,func,params)
 
-#pragma pack(2)
+#pragma pack(push,2)
 #include <mgl/gl.h>
-#pragma pack()
+#pragma pack(pop)
 
 SDL_PROC_UNUSED(void,glAccum,(GLenum,GLfloat))
 SDL_PROC(void,glAlphaFunc,(GLenum,GLclampf))
