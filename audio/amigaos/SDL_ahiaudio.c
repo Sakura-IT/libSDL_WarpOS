@@ -43,6 +43,8 @@ static void AHI_PlayAudio(_THIS);
 static Uint8 *AHI_GetAudioBuf(_THIS);
 static void AHI_CloseAudio(_THIS);
 
+//int has_obtained_spec = 0;
+
 #if defined(__SASC)
 	#define mymalloc malloc
 	#define myfree free
@@ -125,10 +127,6 @@ static SDL_AudioDevice *Audio_CreateDevice(int devindex)
 
 	return this;
 }
-
-AudioBootStrap AHI_bootstrap = {
-	"AHI", Audio_Available, Audio_CreateDevice
-};
 
 
 void static AHI_WaitAudio(_THIS)
@@ -343,4 +341,15 @@ static int AHI_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	return(0);
 }
 
-
+#if 0
+AudioBootStrap AHI_bootstrap = {
+	"AHI",
+	"ahi.device SDL audio",
+	Audio_Available,
+	Audio_CreateDevice
+};
+#else
+AudioBootStrap AHI_bootstrap = {
+	"AHI", Audio_Available, Audio_CreateDevice
+};
+#endif

@@ -77,7 +77,9 @@ struct SDL_AudioDevice {
 	/* Lock / Unlock functions added for the Mac port */
 	void (*LockAudio)(_THIS);
 	void (*UnlockAudio)(_THIS);
-
+	
+	void (*SetCaption)(_THIS, const char *caption);
+	
 	/* * * */
 	/* Data common to all devices */
 
