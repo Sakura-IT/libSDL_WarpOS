@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -30,32 +30,10 @@
 #pragma pack(pop)
 
  
-/* This is a set of defines to configure the SDL features */
-//#ifndef _HAVE_STDINT_H
-
-//#ifndef __BIT_TYPES_DEFINED__
-//typedef signed char         int8_t;
-//typedef unsigned char       uint8_t;
-//typedef signed short        int16_t;
-//typedef unsigned short      uint16_t;
-//typedef signed int          int32_t;
-//typedef unsigned int        uint32_t;
-//#ifndef size_t
-//typedef unsigned int        size_t;
-//#endif
-//typedef unsigned long       uintptr_t;
-//typedef signed long long    int64_t;
-//typedef unsigned long long  uint64_t;
-//#endif
-
-//#endif
-
 #ifndef SDL_HAS_64BIT_TYPE
 #define SDL_HAS_64BIT_TYPE	1
 #endif
 #define SDL_BYTEORDER	SDL_BIG_ENDIAN
-
-//#define HAVE_LIBC 1
 
 /* Useful headers */
 #define HAVE_SYS_TYPES_H 1
@@ -72,8 +50,8 @@
 #define HAVE_MATH_H 1
 #define HAVE_SIGNAL_H 1
 #define HAVE_ALTIVEC_H 1
-//
-///* C library functions */
+
+/* C library functions */
 #define HAVE_MALLOC 1
 #define HAVE_CALLOC 1
 #define HAVE_REALLOC 1
@@ -88,7 +66,7 @@
 #define HAVE_MEMSET 1
 #define HAVE_MEMCPY 1
 #define HAVE_MEMMOVE 1
-#define SDL_revcpy memmove
+//#define SDL_revcpy memmove
 #define HAVE_MEMCMP 1
 #define HAVE_STRLEN 1
 
@@ -122,18 +100,13 @@
 #define HAVE_CLOCK_GETTIME 1
 
 /* Enable various audio drivers */
-#define SDL_AUDIO_DRIVER_DART	1
-#define SDL_AUDIO_DRIVER_DISK	1
-#define SDL_AUDIO_DRIVER_DUMMY	1
+#define SDL_AUDIO_DRIVER_AHI	1
 
 /* Enable various cdrom drivers */
-//#define SDL_CDROM_AMIGAOS	1
+#define SDL_CDROM_AMIGAOS		1
 
 /* Enable various input drivers */
-//#define SDL_JOYSTICK_AMIGAOS	1
-
-/* Enable various shared object loading systems */
-//#define SDL_LOADSO_AMIGAOS	1
+#define SDL_JOYSTICK_AMIGAOS	1
 
 /* Enable various threading systems */
 #define SDL_THREAD_AMIGAOS	1
@@ -142,6 +115,7 @@
 #define SDL_TIMER_AMIGAOS	1
 
 /* Enable various video drivers */
+#define SDL_VIDEO_DRIVER_CYBERGRAPHICS	1
 #define SDL_VIDEO_DRIVER_AMIGAOS	1
 
 /* Enable OpenGL support */
@@ -149,8 +123,6 @@
 //#define SDL_VIDEO_OPENGL	1 
 
 #undef SDL_VIDEO_OPENGL
-
-//#define SDL_AUDIO_DISABLED 0
 
 /* Enable assembly routines where available */
 #define SDL_ASSEMBLY_ROUTINES	1
