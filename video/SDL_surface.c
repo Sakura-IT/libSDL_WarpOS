@@ -611,7 +611,8 @@ int SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, Uint32 color)
 				row += dst->pitch;
 			}
 		} else {
-#ifdef __powerpc__
+
+#if defined (__powerpc__) && !defined (WARPUP)
 			/*
 			 * SDL_memset() on PPC (both glibc and codewarrior) uses
 			 * the dcbz (Data Cache Block Zero) instruction, which
