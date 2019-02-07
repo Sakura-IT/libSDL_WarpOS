@@ -597,6 +597,12 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 		sysevents_mouse_pressed = 0;
 	#endif
 
+	#ifdef WARPUP
+//	flags &= ~SDL_DOUBLEBUF;
+	if (getenv("SDL_HWSURFACE"))flags |= SDL_HWSURFACE ;
+	if (getenv("SDL_SWSURFACE"))flags &= ~SDL_HWSURFACE ;
+	#endif
+
 	/* Start up the video driver, if necessary..
 	   WARNING: This is the only function protected this way!
 	 */
@@ -775,7 +781,7 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 #define __SDL_NOGETPROCADDR__
 #elif defined(__MINT__)
 #define __SDL_NOGETPROCADDR__
-//#elif defined(__MORPHOS__)
+//#elif defined(WARPUP)
 //#define __SDL_NOGETPROCADDR__
 #endif
 #ifdef __SDL_NOGETPROCADDR__
@@ -1635,12 +1641,12 @@ void SDL_GL_Lock()
 	if (lock_count==-1)
 	{
 		SDL_VideoDevice *this = current_video;
-
+#ifndef WARPUP
 		this->glPushAttrib( GL_ALL_ATTRIB_BITS );	/* TODO: narrow range of what is saved */
 #ifdef GL_CLIENT_PIXEL_STORE_BIT
 		this->glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT );
 #endif
-
+#endif
 		this->glEnable(GL_TEXTURE_2D);
 		this->glEnable(GL_BLEND);
 		this->glDisable(GL_FOG);
@@ -1687,9 +1693,10 @@ void SDL_GL_Unlock()
 		this->glPopMatrix();
 		this->glMatrixMode(GL_PROJECTION);
 		this->glPopMatrix();
-
+#ifndef WARPUP
 		this->glPopClientAttrib();
 		this->glPopAttrib();
+#endif
 	}
 #endif
 }
