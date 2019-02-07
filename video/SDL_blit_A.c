@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,6 @@
 #include "SDL_video.h"
 #include "SDL_blit.h"
 
-#if SDL_ALTIVEC_BLITTERS
-#ifdef HAVE_ALTIVEC_H
-#include <altivec.h>
-#endif
-#endif
-
 /*
   In Visual C, VC6 has mmintrin.h in the "Processor Pack" add-on.
    Checking if _mm_free is #defined in malloc.h is is the only way to
@@ -38,8 +32,9 @@
 
 #if SDL_ASSEMBLY_ROUTINES
 #  if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-#    define MMX_ASMBLIT 1
-#    define GCC_ASMBLIT 1
+     /* forced MMX to 0...it breaks on most compilers now.  --ryan. */
+#    define MMX_ASMBLIT 0
+#    define GCC_ASMBLIT 0
 #  elif defined(_MSC_VER) && defined(_M_IX86)
 #    if (_MSC_VER <= 1200)  
 #      include <malloc.h>   
@@ -675,7 +670,7 @@ static void BlitRGBtoRGBPixelAlphaMMX(SDL_BlitInfo *info)
     #define VECUINT16_LITERAL(a,b,c,d,e,f,g,h) \
         (vector unsigned short) ( a,b,c,d,e,f,g,h )
 #else
-    #define VECUINT8_LITERAL(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
+	#define VECUINT8_LITERAL(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
         (vector unsigned char) { a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p }
     #define VECUINT16_LITERAL(a,b,c,d,e,f,g,h) \
         (vector unsigned short) { a,b,c,d,e,f,g,h }
@@ -1039,14 +1034,27 @@ static void Blit32to32SurfaceAlphaKeyAltivec(SDL_BlitInfo *info)
                 /* set the alpha channel to full on */
                 vd = vec_or(vd, valphamask);
 
+                #if 0
+                /* It seems this does not work right...
+                 * Disabled 8/2/2009, IL
+                 */
                 /* mask out color key */
                 vd = vec_sel(vd, vd_orig, vsel);
+                #endif
                 
                 /* permute to dest format */
                 vd = vec_perm(vd, vbits, vdstPermute);
 
+                #if 1
+                /* It seems this does work right...
+                 * Enabled 8/2/2009, IL
+                 */
+                /* mask out color key */
+                vd = vec_sel(vd, vd_orig, vsel);
+                #endif
+
                 /* *dstp = res */
-                vec_st((vector unsigned int)vd, 0, dstp);
+				vec_st(vd, 0, (unsigned char*)dstp);
                 
                 srcp += 4;
                 dstp += 4;
@@ -1143,7 +1151,7 @@ static void Blit32to32PixelAlphaAltivec(SDL_BlitInfo *info)
                 vd = vec_perm(vd, v0, vdstPermute);
 
                 /* *dstp = res */
-                vec_st((vector unsigned int)vd, 0, dstp);
+				vec_st(vd, 0, (unsigned char*)dstp);
                 
                 srcp += 4;
                 dstp += 4;
@@ -1241,7 +1249,7 @@ static void BlitRGBtoRGBPixelAlphaAltivec(SDL_BlitInfo *info)
                 vd = vec_or(vd, vdstalpha);
 
                 /* *dstp = res */
-                vec_st((vector unsigned int)vd, 0, dstp);
+				vec_st(vd, 0, (unsigned char*)dstp);
                 
                 srcp += 4;
                 dstp += 4;
@@ -1418,7 +1426,7 @@ static void BlitRGBtoRGBSurfaceAlphaAltivec(SDL_BlitInfo *info)
                 vd = vec_or(vd, valphamask);
 
                 /* *dstp = res */
-                vec_st((vector unsigned int)vd, 0, dstp);
+				vec_st(vd, 0, (unsigned char*)dstp);
                 
                 srcp += 4;
                 dstp += 4;
@@ -2736,8 +2744,7 @@ SDL_loblit SDL_CalculateAlphaBlit(SDL_Surface *surface, int blit_index)
 		return BlitNto1SurfaceAlphaKey;
 	    else
 #if SDL_ALTIVEC_BLITTERS
-	if (sf->BytesPerPixel == 4 && df->BytesPerPixel == 4 &&
-	    !(surface->map->dst->flags & SDL_HWSURFACE) && SDL_HasAltiVec())
+	if (surface->pitch >= 16 && sf->BytesPerPixel == 4 && df->BytesPerPixel == 4 && SDL_HasAltiVec())
             return Blit32to32SurfaceAlphaKeyAltivec;
         else
 #endif
@@ -2787,16 +2794,14 @@ SDL_loblit SDL_CalculateAlphaBlit(SDL_Surface *surface, int blit_index)
 			if((sf->Rmask | sf->Gmask | sf->Bmask) == 0xffffff)
 			{
 #if SDL_ALTIVEC_BLITTERS
-				if(!(surface->map->dst->flags & SDL_HWSURFACE)
-					&& SDL_HasAltiVec())
+				if(surface->pitch >= 16 && SDL_HasAltiVec())
 					return BlitRGBtoRGBSurfaceAlphaAltivec;
 #endif
 				return BlitRGBtoRGBSurfaceAlpha;
 			}
 		}
 #if SDL_ALTIVEC_BLITTERS
-		if((sf->BytesPerPixel == 4) &&
-		   !(surface->map->dst->flags & SDL_HWSURFACE) && SDL_HasAltiVec())
+		if(surface->pitch >= 16 && sf->BytesPerPixel == 4 && SDL_HasAltiVec())
 			return Blit32to32SurfaceAlphaAltivec;
 		else
 #endif
@@ -2815,7 +2820,7 @@ SDL_loblit SDL_CalculateAlphaBlit(SDL_Surface *surface, int blit_index)
 
 	case 2:
 #if SDL_ALTIVEC_BLITTERS
-	if(sf->BytesPerPixel == 4 && !(surface->map->dst->flags & SDL_HWSURFACE) &&
+	if(surface->pitch >= 16 && sf->BytesPerPixel == 4 && 
            df->Gmask == 0x7e0 &&
 	   df->Bmask == 0x1f && SDL_HasAltiVec())
             return Blit32to565PixelAlphaAltivec;
@@ -2854,17 +2859,15 @@ SDL_loblit SDL_CalculateAlphaBlit(SDL_Surface *surface, int blit_index)
 		if(sf->Amask == 0xff000000)
 		{
 #if SDL_ALTIVEC_BLITTERS
-			if(!(surface->map->dst->flags & SDL_HWSURFACE)
-				&& SDL_HasAltiVec())
+			if(surface->pitch >= 16 && SDL_HasAltiVec())
 				return BlitRGBtoRGBPixelAlphaAltivec;
 #endif
 			return BlitRGBtoRGBPixelAlpha;
 		}
 	    }
 #if SDL_ALTIVEC_BLITTERS
-	    if (sf->Amask && sf->BytesPerPixel == 4 &&
-	        !(surface->map->dst->flags & SDL_HWSURFACE) && SDL_HasAltiVec())
-		return Blit32to32PixelAlphaAltivec;
+		if (surface->pitch >= 16 && sf->Amask && sf->BytesPerPixel == 4 && SDL_HasAltiVec())
+			return Blit32to32PixelAlphaAltivec;
 	    else
 #endif
 		return BlitNtoNPixelAlpha;

@@ -98,7 +98,7 @@ typedef struct SDL_RWops {
 
 extern DECLSPEC SDL_RWops * SDLCALL SDL_RWFromFile(const char *file, const char *mode);
 
-#if defined(HAVE_STDIO_H) || defined(__MORPHOS__)
+#if defined(HAVE_STDIO_H)
 extern DECLSPEC SDL_RWops * SDLCALL SDL_RWFromFP(FILE *fp, int autoclose);
 #endif
 

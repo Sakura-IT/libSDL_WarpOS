@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2009 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -144,9 +144,6 @@ typedef struct SDL_Surface {
 #define SDL_RESIZABLE	0x00000010	/**< This video mode may be resized */
 #define SDL_NOFRAME	0x00000020	/**< No window caption or edge frame */
 /*@}*/
-
-/** Available for SDLA_SetQuickLazyBlit() */
-#define SDLA_QUICKLAZY  0x00000040	/**< Blitting from same src to same dest format, skip long considerations */
 
 /** Used internally (read-only) */
 /*@{*/
@@ -617,20 +614,6 @@ extern DECLSPEC int SDLCALL SDL_SaveBMP_RW
  */
 extern DECLSPEC int SDLCALL SDL_SetColorKey
 			(SDL_Surface *surface, Uint32 flag, Uint32 key);
-
-/**
- * Sets the quick'n'lazy blit mode in a blittable surface.
- * This simply means that blit modes and methods are cached across
- * subsequent calls. If you intend to blit a given source surface
- * to different destinations (in terms of depth and available
- * hardware acceleration), clear the lazy state before doing so.
- * 
- * Clearing the lazy state just reverts the surface to normal blitting
- * operation.
- */
-extern DECLSPEC void SDLCALL SDLA_SetQuickLazyBlit
-                        (SDL_Surface *surface, Uint32 yesno );
-
 
 /**
  * This function sets the alpha value for the entire surface, as opposed to

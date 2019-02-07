@@ -19,8 +19,10 @@
     Sam Lantinga
     slouken@libsdl.org
 */
+
 #include "SDL_config.h"
 #include "amigaos/SDL_cgxasm.h"
+
 /* 
    Code to load and save surfaces in Windows BMP format.
 
@@ -313,7 +315,7 @@ SDL_Surface * SDL_LoadBMP_RW (SDL_RWops *src, int freesrc)
 				case 15:
 				case 16: {
 				        Uint16 *pix = (Uint16 *)bits;
-					#if defined(__MORPHOS__)
+					#if defined(WARPUP)
 					copy_and_swap16(pix, pix, surface->w);
 					#else
 					for(i = 0; i < surface->w; i++)
@@ -324,7 +326,7 @@ SDL_Surface * SDL_LoadBMP_RW (SDL_RWops *src, int freesrc)
 
 				case 32: {
 				        Uint32 *pix = (Uint32 *)bits;
-					#if defined(__MORPHOS__)
+					#if defined(WARPUP)
 					copy_and_swap32(pix, pix, surface->w);
 					#else
 					for(i = 0; i < surface->w; i++)

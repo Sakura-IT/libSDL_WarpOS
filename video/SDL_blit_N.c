@@ -1,6 +1,6 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2006 Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ static size_t GetL3CacheSize( void )
     return 2097152;
 }
 #endif /* __MACOSX__ */
-#define static
+
 #if (defined(__MACOSX__) && (__GNUC__ < 4))
     #define VECUINT8_LITERAL(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) \
         (vector unsigned char) ( a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p )
@@ -1211,7 +1211,6 @@ static void Blit_RGB888_RGB565(SDL_BlitInfo *info)
 #endif /* SDL_HERMES_BLITTERS */
 
 
-
 /* Special optimized blit for RGB 5-6-5 --> 32-bit RGB surfaces */
 #define RGB565_32(dst, src, map) (map[src[LO]*2] + map[src[HI]*2+1])
 static void Blit_RGB565_32(SDL_BlitInfo *info, const Uint32 *map)
@@ -2312,7 +2311,7 @@ static const struct blit_table normal_blit_2[] = {
     { 0,0,0, 0, 0,0,0, 0, NULL, BlitNtoN, 0 }
 };
 static const struct blit_table normal_blit_3[] = {
-    /* Default for 24-bit RGB source, never optimized */
+	/* Default for 24-bit RGB source, never optimized */
     { 0,0,0, 0, 0,0,0, 0, NULL, BlitNtoN, 0 }
 };
 static const struct blit_table normal_blit_4[] = {
@@ -2334,6 +2333,8 @@ static const struct blit_table normal_blit_4[] = {
     { 0x00FF0000,0x0000FF00,0x000000FF, 2, 0x0000001F,0x000003E0,0x00007C00,
       0, ConvertX86p32_16BGR555, ConvertX86, NO_ALPHA },
     { 0x00FF0000,0x0000FF00,0x000000FF, 3, 0x00FF0000,0x0000FF00,0x000000FF,
+      1, ConvertMMXpII32_24RGB888, ConvertMMX, NO_ALPHA },
+    { 0x00FF0000,0x0000FF00,0x000000FF, 3, 0x00FF0000,0x0000FF00,0x000000FF,
       0, ConvertX86p32_24RGB888, ConvertX86, NO_ALPHA },
     { 0x00FF0000,0x0000FF00,0x000000FF, 3, 0x000000FF,0x0000FF00,0x00FF0000,
       0, ConvertX86p32_24BGR888, ConvertX86, NO_ALPHA },
@@ -2344,7 +2345,7 @@ static const struct blit_table normal_blit_4[] = {
     { 0x00FF0000,0x0000FF00,0x000000FF, 4, 0x0000FF00,0x00FF0000,0xFF000000,
       0, ConvertX86p32_32BGRA888, ConvertX86, NO_ALPHA },
 #else
-#if SDL_ALTIVEC_BLITTERSx
+#if SDL_ALTIVEC_BLITTERS
     /* has-altivec | dont-use-prefetch */
     { 0x00000000,0x00000000,0x00000000, 4, 0x00000000,0x00000000,0x00000000,
       6, NULL, ConvertAltivec32to32_noprefetch, NO_ALPHA | COPY_ALPHA | SET_ALPHA },
@@ -2352,7 +2353,7 @@ static const struct blit_table normal_blit_4[] = {
     { 0x00000000,0x00000000,0x00000000, 4, 0x00000000,0x00000000,0x00000000,
       2, NULL, ConvertAltivec32to32_prefetch, NO_ALPHA | COPY_ALPHA | SET_ALPHA },
     /* has-altivec */
-    { 0x00FF0000,0x0000FF00,0x000000FF, 2, 0x0000F800,0x000007E0,0x0000001F,
+    { 0x00000000,0x00000000,0x00000000, 2, 0x0000F800,0x000007E0,0x0000001F,
       2, NULL, Blit_RGB888_RGB565Altivec, NO_ALPHA },
 #endif
     { 0x00FF0000,0x0000FF00,0x000000FF, 2, 0x0000F800,0x000007E0,0x0000001F,
@@ -2406,7 +2407,7 @@ SDL_loblit SDL_CalculateBlitN(SDL_Surface *surface, int blit_index)
 		return BlitNto1Key;
 	    else {
 #if SDL_ALTIVEC_BLITTERS
-        if((srcfmt->BytesPerPixel == 4) && (dstfmt->BytesPerPixel == 4) && SDL_HasAltiVec()) {
+        if((surface->pitch >= 16) && (srcfmt->BytesPerPixel == 4) && (dstfmt->BytesPerPixel == 4) && SDL_HasAltiVec()) {
             return Blit32to32KeyAltivec;
         } else
 #endif
