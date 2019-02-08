@@ -33,7 +33,7 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if defined(HAVE_STDIO_H) || defined(__MORPHOS__)
+#if defined(HAVE_STDIO_H)
 #include <stdio.h>
 #endif
 #if defined(STDC_HEADERS)

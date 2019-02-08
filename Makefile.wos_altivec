@@ -5,6 +5,11 @@ AS := as
 LD := ld
 RL := ranlib
 
+VC  := vc
+VLD := vlink
+VCDEFINES = -DWARPOS
+VCFLAGS = +aos68k -c99 -Igg:os-includeppc -Igg:os-includeppc/sdl
+
 DEFINES= DEFINE=ENABLE_CYBERGRAPHICS DEFINE=inline=__inline  DEFINE=NO_SIGNAL_H DEFINE=HAVE_STDIO_H DEFINE=ENABLE_AHI
 
 # DEFINE=HAVE_OPENGL
@@ -33,6 +38,12 @@ GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wa
 	video/amigaos/SDL_cgxyuv.go video/amigaos/SDL_cgxaccel.go video/amigaos/SDL_cgxgl_wrapper.go \
 	video/SDL_gamma.go stdlib/SDL_stdlib.go stdlib/SDL_string.go stdlib/SDL_malloc.go stdlib/SDL_getenv.go
 
+VOBJS = video/amigaos/SDL_cgxwm_68k.o
+VOBJSELF = video/amigaos/SDL_cgxwm_68k.go
+
+%_68k.o: %_68k.c
+	$(VC) $(VCFLAGS) $(VCDEFINES) -c $*_68k.c -o $@
+	vlink -belf32morphos -set-deluscore -r $@ -o $*_68k.go
 
 %.go: %.c
 	$(CC) $(CFLAGS) $(GCCDEFINES) -o $@ -c $*.c
@@ -42,10 +53,10 @@ GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wa
 
 all: libSDL_wos.a
 
-libSDL_wos.a: $(GOBJS)
+libSDL_wos.a: $(GOBJS) $(VOBJS)
 	-rm -f libSDL_wos.a
-	ar cru libSDL_wos.a $(GOBJS)
+	ar cru libSDL_wos.a $(GOBJS) $(VOBJSELF)
 	$(RL) libSDL_wos.a
 
 clean:
-	-rm -f $(GOBJS)
+	-rm -f $(GOBJS) $(VOBJS) $(VOBJSELF)

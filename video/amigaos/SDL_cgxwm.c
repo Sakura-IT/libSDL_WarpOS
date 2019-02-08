@@ -1,20 +1,20 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997, 1998, 1999, 2000, 2001  Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
+    modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+    Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Sam Lantinga
     slouken@libsdl.org
@@ -26,12 +26,8 @@ static char rcsid =
  "@(#) $Id$";
 #endif
 
-//#include "SDL_error.h"
-//#include "SDL_timer.h"
-//#include "SDL_video.h"
 #include "SDL_syswm.h"
 #include "../../events/SDL_events_c.h"
-//#include "SDL_pixels_c.h"
 #include "SDL_cgxmodes_c.h"
 #include "SDL_cgxwm_c.h"
 
@@ -205,64 +201,7 @@ void CGX_UniconifyWindow(_THIS)
 #endif // ShowWindow unsupported
 }
 
-unsigned short InputHandler[] = {
-0x48e7, 0x2038, 0x2208, 0x2849, 0x2441, 0x266c, 0x023c, 0x4aab, 0x00d4, 0x6760, 0x206b, 0x00e4,
-0x242b, 0x000c, 0xb4a8, 0x0034, 0x6652, 0x43ea, 0x0004, 0x0c11, 0x0002, 0x6642, 0x41ea, 0x0006,
-0x0c50, 0x0068, 0x6608, 0x12bc, 0x0001, 0x30bc, 0x0200, 0x3650, 0xb6fc, 0x00e8, 0x660a,
-0x12bc, 0x0001, 0x30bc, 0x0201, 0x601e, 0xb6fc, 0x0069, 0x660a, 0x12bc, 0x0001, 0x30bc, 0x0202,
-0x600e, 0xb6fc, 0x00e9, 0x6608, 0x12bc, 0x0001, 0x30bc, 0x0203, 0x2452, 0x200a, 0x66ae, 0x2001,
-0x4cdf, 0x1c04, 0x4e75
-};
-
-#if 0  
-//Below is the above 68k code compiled with vc +aos68k -O2 -cpu=68020 -c99 -DWARPOS SDL_cgxwm.c -c -Igg:os-includeppc -Igg:os-includeppc/sdl
-//Include intuition/intutionbase.h and align SDL_VideoDevice to 4 (68k default is 2)
-static struct InputEvent *InputHandler(__reg("a0") struct InputEvent *event, __reg("a1") SDL_VideoDevice *this)
-{
-   
-   struct InputEvent *ie;
-
-	ie = event;
- 
-	if (this->hidden->window_active == 0)
-		return event;
-	if (SDL_Window != this->hidden->IntuiBase->ActiveWindow)
-		return event;
-   do
-   {
-	   if (ie->ie_Class == IECLASS_RAWMOUSE)
-	   {
-		   if (ie->ie_Code == IECODE_LBUTTON)
-		   {
-			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x200;
-		   }
-		   
-		   if (ie->ie_Code == (IECODE_LBUTTON | IECODE_UP_PREFIX))
-		   {
-			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x201;
-		   }
-
-		   else if (ie->ie_Code == IECODE_RBUTTON)
-		   {
-			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x202;
-		   }
-
-		   else if (ie->ie_Code == (IECODE_RBUTTON | IECODE_UP_PREFIX))
-		   {
-			   ie->ie_Class		   = IECLASS_RAWKEY;
-			   ie->ie_Code		   = 0x203;
-		   }
-	   }
-   }
-   while ((ie = ie->ie_NextEvent) != NULL);
-
-   return event;
-}
-#endif
-
+extern struct InputEvent *InputHandler (struct InputEvent *event, SDL_VideoDevice *this);
 static struct Interrupt	Handler		= { { NULL, NULL, 0, 55, "WarpOS SDL Input Lock" }, NULL, (VOID (*)())&InputHandler };
 static struct IOStdReq *ioreq 		= NULL;
 
