@@ -20,17 +20,12 @@
     slouken@libsdl.org
 */
 
-#include <SDL_config.h>
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
 #endif
 
-#include "SDL/SDL_config.h"
-#include "SDL_syswm.h"
-#include "../../events/SDL_events_c.h"
-#include "SDL_cgxmodes_c.h"
-#include "SDL_cgxwm_c.h"
+#include "SDL_cgxvideo.h"
 
 #ifdef __VBCC__
 #include <inline/cybergraphics_protos.h>

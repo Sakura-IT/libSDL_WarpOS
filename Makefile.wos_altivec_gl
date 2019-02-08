@@ -7,7 +7,7 @@ RL := ranlib
 
 VC  := vc
 VLD := vlink
-VCDEFINES = -DWARPOS
+VCDEFINES = -DWARPOS -D__SIZE_T
 VCFLAGS = +aos68k -c99 -O2 -Igg:os-includeppc -Igg:os-includeppc/sdl
 
 DEFINES= DEFINE=ENABLE_CYBERGRAPHICS DEFINE=inline=__inline  DEFINE=NO_SIGNAL_H DEFINE=HAVE_STDIO_H DEFINE=ENABLE_AHI
