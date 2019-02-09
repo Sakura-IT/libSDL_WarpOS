@@ -1,20 +1,20 @@
 /*
     SDL - Simple DirectMedia Layer
-    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002  Sam Lantinga
+    Copyright (C) 1997-2012 Sam Lantinga
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
+    modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
+    Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     Sam Lantinga
     slouken@libsdl.org
@@ -29,6 +29,7 @@ static char rcsid =
 #pragma pack(push, 2)
 #include <proto/dos.h>
 #include <proto/keymap.h>
+#include <powerpc/powerpc.h>
 #pragma pack(pop)
 
 /* Handle the event stream, converting Amiga events into SDL events */
@@ -65,13 +66,14 @@ static int amiga_GetButton(int code)
 	}
 }
 
-static int mousex,mousey, oldtaskpri ;
-
-static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
+static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 {
-	int class=msg->Class,code=msg->Code;
+	int class = event.Class;
+	int code = event.Code;
+	int qualifier = event.Qualifier;
+	int mousex = event.MouseX;
+	int mousey = event.MouseY;
 	int posted;
-	int qual = msg->Qualifier;
 
 	posted = 0;
 
@@ -112,13 +114,13 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 
 				if (mouse_relative == 1)
 				{
-					SDL_PrivateMouseMotion(0, mouse_relative, msg->MouseX, msg->MouseY);
+					SDL_PrivateMouseMotion(0, mouse_relative, mousex, mousey);
 				}
 				else
 				{
 					posted = SDL_PrivateMouseMotion(0, mouse_relative,
-						msg->MouseX-SDL_Window->BorderLeft,
-						msg->MouseY-SDL_Window->BorderTop);
+						mousex-SDL_Window->BorderLeft,
+						mousey-SDL_Window->BorderTop);
 				}
 			}
 	    		break;
@@ -141,7 +143,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 	    case IDCMP_RAWKEY:
 
 		    /* Key press? */
-			if ((msg->Qualifier && IEQUALIFIER_LALT) && (msg->Qualifier && IEQUALIFIER_CONTROL) && (code == 0x25))
+			if ((qualifier && IEQUALIFIER_LALT) && (qualifier && IEQUALIFIER_CONTROL) && (code == 0x25))
 			{
 				extern int skipframe,toggle;
 				
@@ -156,28 +158,24 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 				case 0x200	:
 				{
 					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_LEFT, 0, 0);
-					ReplyMsg((struct Message *)msg);
 					return(posted);
 
 				}
 				case 0x201	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_LEFT, 0, 0);
-					ReplyMsg((struct Message *)msg);
 					return(posted);
 
 				}
 				case 0x202	:
 				{
 					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_RIGHT, 0, 0);
-					ReplyMsg((struct Message *)msg);
 					return(posted);
 
 				}
 				case 0x203	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_RIGHT, 0, 0);
-					ReplyMsg((struct Message *)msg);
 					return(posted);
 
 				}
@@ -202,7 +200,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 		    	{
 				SDL_keysym keysym;
 				posted = SDL_PrivateKeyboard(SDL_PRESSED,
-				amiga_TranslateKey(code,msg->Qualifier, &keysym));
+				amiga_TranslateKey(code, qualifier, &keysym));
 		    	}
 		    	else
 		    	{
@@ -215,7 +213,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 /*				if ( ! X11_KeyRepeat(SDL_Display, &xevent) )  */
 
 				posted = SDL_PrivateKeyboard(SDL_RELEASED,
-				amiga_TranslateKey(code,msg->Qualifier, &keysym));
+				amiga_TranslateKey(code, qualifier, &keysym));
 					
 				if (SDL_TranslateUNICODE)  // fix when press a key and release qualifier before key.key is repeat endless without that fix
 				{
@@ -226,7 +224,7 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
               				posted = SDL_PrivateKeyboard(SDL_RELEASED,
 					amiga_TranslateKey(code,IEQUALIFIER_CONTROL, &keysym));
 					posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code,0, &keysym));
+					amiga_TranslateKey(code, 0, &keysym));
          			}	
 		    	}
 		    	break;
@@ -237,14 +235,14 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 
 //					{				{
 //						SDL_keysym keysym;
-//						amiga_TranslateKey(code & ~IECODE_UP_PREFIX, qual, &keysym);
+//						amiga_TranslateKey(code & ~IECODE_UP_PREFIX, qualifier, &keysym);
 //
 //						if (code > 0x7f || !this->hidden->oldkey || this->hidden->oldkey != keysym.sym)
 //						{
 //							this->hidden->oldkey = code > 0x7f ? 0 : keysym.sym;
 //							SDL_PrivateKeyboard(code > 0x7f ? SDL_RELEASED : SDL_PRESSED, &keysym);
 //						}
-//						this->hidden->oldqual = qual;
+//						this->hidden->oldqual = qualifier;
 //					}
 				
 			break;
@@ -273,28 +271,40 @@ static int amiga_DispatchEvent(_THIS,struct IntuiMessage *msg)
 	    }
 	    break;
 	}
-	ReplyMsg((struct Message *)msg);
 
 	return(posted);
 }
 
+int Sys_GetEvents(void *port,void *msgarray,int arraysize)
+{
+     extern int GetMessages68k();
+     struct PPCArgs args;
+
+     args.PP_Code = (APTR)GetMessages68k;
+     args.PP_Offset = 0;
+     args.PP_Flags = 0;
+     args.PP_Stack = NULL;
+     args.PP_StackSize = 0;
+     args.PP_Regs[PPREG_A0] = (ULONG)msgarray;
+     args.PP_Regs[PPREG_A1] = (ULONG)port;
+     args.PP_Regs[PPREG_D0] = arraysize;
+
+     Run68K(&args);
+     return args.PP_Regs[PPREG_D0];
+}
+
 void amiga_PumpEvents(_THIS)
 {
-	int pending;
-	struct IntuiMessage *m;
-	if ((!SDL_Window) || (!SDL_Window->UserPort))return;
-        mousex = -16000; // to collect only the last mousepos and detect if a mousemove have come.
-	mousey = -16000;
-	/* Keep processing pending events */
-	pending = 0;
-	
-	while ( m=(struct IntuiMessage *)GetMsg(SDL_Window->UserPort) ) {
-		amiga_DispatchEvent(this,m);
-		++pending;
-	}
-	if (mousex != -16000)
-	{   
-		SDL_PrivateMouseMotion(0, 0,mousex,mousey);
+	int i;
+	struct MsgStruct events[50];
+	if ((!SDL_Window) || (!SDL_Window->UserPort))
+		return;
+
+	int messages = Sys_GetEvents(SDL_Window->UserPort, events, 50);
+
+        for (i=0; i<messages; i++)
+        {
+		amiga_DispatchEvent(this, events[i]);
 	}
 }
 
