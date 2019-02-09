@@ -8,21 +8,10 @@ RL := ranlib
 VC  := vc
 VLD := vlink
 VCDEFINES = -DWARPOS -D__SIZE_T
-VCFLAGS = +aos68k -c99 -O2 -Igg:os-includeppc -Igg:os-includeppc/sdl
+VCFLAGS = +aos68k -c99 -O3 -Igg:os-includeppc -Igg:os-includeppc/sdl
 
-DEFINES= DEFINE=ENABLE_CYBERGRAPHICS DEFINE=inline=__inline  DEFINE=NO_SIGNAL_H DEFINE=HAVE_STDIO_H DEFINE=ENABLE_AHI
-
-# DEFINE=HAVE_OPENGL
-INCLUDES= IDIR=./include/SDL
-#-I$(PREF)/m68k-unknown-amigaos/include -I$(PREF)/env/m68k-unknown-amigaos/sys-include
-CFLAGS = --specs=warpup -maltivec -I. -I../include -I./include/ -I./include/SDL -O2 -fomit-frame-pointer -DNO_AMIGADEBUG
-#DEBUG=FULL VERBOSE
-
-GLFLAGS = -DSHARED_LIB -DNO_AMIGADEBUG -lm
-
-GCCDEFINES = -DWARPOS -DENABLE_CYBERGRAPHICS -DNO_SIGNAL_H -D__MEM_AMIGA -DENABLE_AHI -DSDL_ALTIVEC_COPY -DSDL_ALTIVEC_BLITTERS
-#-DNO_INLINE_STDARG
-  
+CFLAGS = --specs=warpup -maltivec -I. -I../include -I./include/ -I./include/SDL -O2 -fomit-frame-pointer
+GCCDEFINES = -DNO_AMIGADEBUG -DWARPOS -DENABLE_CYBERGRAPHICS -DNO_SIGNAL_H -D__MEM_AMIGA -DENABLE_AHI -DSDL_ALTIVEC_COPY -DSDL_ALTIVEC_BLITTERS
 
 GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wave.go audio/amigaos/SDL_ahiaudio.go \
 	main/SDL_error.go main/SDL_fatal.go video/SDL_RLEaccel.go video/SDL_blit.go video/SDL_blit_0.go \
@@ -38,8 +27,8 @@ GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wa
 	video/amigaos/SDL_cgxyuv.go video/amigaos/SDL_cgxaccel.go video/amigaos/SDL_cgxgl_wrapper.go \
 	video/SDL_gamma.go stdlib/SDL_stdlib.go stdlib/SDL_string.go stdlib/SDL_malloc.go stdlib/SDL_getenv.go
 
-VOBJS = video/amigaos/SDL_cgxwm_68k.o
-VOBJSELF = video/amigaos/SDL_cgxwm_68k.go
+VOBJS = video/amigaos/SDL_cgxwm_68k.o video/amigaos/SDL_amigaevents_68k.o
+VOBJSELF = video/amigaos/SDL_cgxwm_68k.go video/amigaos/SDL_amigaevents_68k.go
 
 %_68k.o: %_68k.c
 	$(VC) $(VCFLAGS) $(VCDEFINES) -c $*_68k.c -o $@

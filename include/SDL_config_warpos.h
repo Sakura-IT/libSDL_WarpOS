@@ -122,19 +122,24 @@
 
 //#define SDL_VIDEO_OPENGL	1 
 
-#undef SDL_VIDEO_OPENGL
-
 /* Enable assembly routines where available */
 #define SDL_ASSEMBLY_ROUTINES	1
 #define SDL_AMIGA_NOWINDOW 0x10000
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* AHI driver external */
+extern int has_obtained_spec;
+
 void SDL_AmigaLockWindow(void);
 void SDL_AmigaUnlockWindow(void);
 struct Window * SDL_AmigaWindowAddr(void);
+
 #ifdef __cplusplus
 }
 #endif
+
 #endif /* _SDL_config_warpos_h */
 

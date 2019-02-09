@@ -145,6 +145,7 @@ void SDL_GL_UpdateRectsLock(SDL_VideoDevice* this, int numrects, SDL_Rect* rects
 static SDL_GrabMode SDL_WM_GrabInputOff(void);
 #if SDL_VIDEO_OPENGL
 static int lock_count = 0;
+#define	GL_STENCIL_TEST                  0x0B90
 #endif
 
 
