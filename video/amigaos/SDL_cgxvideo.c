@@ -875,6 +875,10 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 	{
 		this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
 	} 
+	else
+	{
+		swap_pixels = 1;			//Need to byte swap 8 bit screens on Permedia 2
+	}
 				
 	this->hidden->BytesPerPixel=GetCyberMapAttr(SDL_Window->RPort->BitMap,CYBRMATTR_BPPIX);
 

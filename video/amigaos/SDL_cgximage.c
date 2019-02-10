@@ -423,25 +423,13 @@ static void CGX_SwapAllPixels(SDL_Surface *screen)
 	int x, y;
 
 	switch (screen->format->BytesPerPixel) {
-	    case 2: {
+	    case 1: {
 		Uint16 *spot;
 		for ( y=0; y<screen->h; ++y ) {
 			spot = (Uint16 *) ((Uint8 *)screen->pixels +
 						y * screen->pitch);
-			for ( x=0; x<screen->w; ++x, ++spot ) {
+			for ( x=0; x<screen->w; x+=2, ++spot ) {
 				*spot = SDL_Swap16(*spot);
-			}
-		}
-	    }
-	    break;
-
-	    case 4: {
-		Uint32 *spot;
-		for ( y=0; y<screen->h; ++y ) {
-			spot = (Uint32 *) ((Uint8 *)screen->pixels +
-						y * screen->pitch);
-			for ( x=0; x<screen->w; ++x, ++spot ) {
-				*spot = SDL_Swap32(*spot);
 			}
 		}
 	    }
@@ -459,7 +447,7 @@ static void CGX_SwapPixels(SDL_Surface *screen, int numrects, SDL_Rect *rects)
 	int y, miny, maxy;
 
 	switch (screen->format->BytesPerPixel) {
-	    case 2: {
+	    case 1: {
 		Uint16 *spot;
 		for ( i=0; i<numrects; ++i ) {
 			minx = rects[i].x;
@@ -468,27 +456,9 @@ static void CGX_SwapPixels(SDL_Surface *screen, int numrects, SDL_Rect *rects)
 			maxy = rects[i].y+rects[i].h;
 			for ( y=miny; y<maxy; ++y ) {
 				spot = (Uint16 *) ((Uint8 *)screen->pixels +
-						y * screen->pitch + minx * 2);
-				for ( x=minx; x<maxx; ++x, ++spot ) {
+						y * screen->pitch + minx * 1);
+				for ( x=minx; x<maxx; x+=2, spot++ ) {
 					*spot = SDL_Swap16(*spot);
-				}
-			}
-		}
-	    }
-	    break;
-
-	    case 4: {
-		Uint32 *spot;
-		for ( i=0; i<numrects; ++i ) {
-			minx = rects[i].x;
-			maxx = rects[i].x+rects[i].w;
-			miny = rects[i].y;
-			maxy = rects[i].y+rects[i].h;
-			for ( y=miny; y<maxy; ++y ) {
-				spot = (Uint32 *) ((Uint8 *)screen->pixels +
-						y * screen->pitch + minx * 4);
-				for ( x=minx; x<maxx; ++x, ++spot ) {
-					*spot = SDL_Swap32(*spot);
 				}
 			}
 		}
@@ -521,7 +491,7 @@ static void CGX_FakeUpdate(_THIS, int numrects, SDL_Rect *rects)
 
 static void CGX_NormalUpdate(_THIS, int numrects, SDL_Rect *rects)
 {
-	int i,format,customroutine=0;
+	int i,format,customroutine=0,swap_required=0;
 	unsigned char *bm_address;
 		Uint32	destpitch;
     unsigned long handle;
@@ -610,22 +580,11 @@ static void CGX_NormalUpdate(_THIS, int numrects, SDL_Rect *rects)
 			return;
 	}
 
-	/* Check for endian-swapped X server, swap if necessary (VERY slow!) */
-	//if ( swap_pixels &&
-	//     ((this->screen->format->BytesPerPixel%2) == 0) ) {
-	//	D(bug("Software Swapping! SLOOOW!\n"));
-	//	CGX_SwapPixels(this->screen, numrects, rects);
-	//	for ( i=0; i<numrects; ++i ) {
-	//		if ( ! rects[i].w ) { /* Clipped? */
-	//			continue;
-	//		}
-	//		USE_WPA(this->screen->pixels,rects[i].x, rects[i].y,this->screen->pitch,
-	//				SDL_RastPort,SDL_Window->BorderLeft+rects[i].x,SDL_Window->BorderTop+rects[i].y,
-	//				rects[i].w,rects[i].h,format);
-	//	}
-	//	CGX_SwapPixels(this->screen, numrects, rects);
-	//}
-	//else 
+	/* Check for endian-swapped screen, swap if necessary (VERY slow!) */
+	if ( swap_pixels &&  ((this->screen->format->BytesPerPixel%2) == 0) ) {
+		swap_required = 1;	
+		CGX_SwapPixels(this->screen, numrects, rects);
+	}
 	if (customroutine==2)
 	{
 #ifdef USE_CGX_WRITELUTPIXEL
@@ -824,6 +783,8 @@ static void CGX_NormalUpdate(_THIS, int numrects, SDL_Rect *rects)
 					SDL_RastPort,/*SDL_Window->BorderLeft+*/rects[i].x,/*SDL_Window->BorderTop+*/rects[i].y,
 					rects[i].w,rects[i].h,0xc0);
 			}
+			if (swap_required)
+				CGX_SwapPixels(this->screen, numrects, rects);
        			return;
 		}
 	
@@ -887,11 +848,13 @@ static void CGX_NormalUpdate(_THIS, int numrects, SDL_Rect *rects)
 					rects[i].w,rects[i].h,format);
 		}
 	}
+	if (swap_required)
+		CGX_SwapPixels(this->screen, numrects, rects);
 }
  // need on toggle fullscreen
 void CGX_RefreshDisplay(_THIS)
 {
-	int i,format,customroutine=0;
+	int i,format,customroutine=0,swap_required=0;
 	
 	unsigned char *bm_address;
 		Uint32	destpitch;
@@ -972,16 +935,12 @@ void CGX_RefreshDisplay(_THIS)
 
 	}
 
-		/* Check for endian-swapped X server, swap if necessary */
-	if ( swap_pixels &&
-	     ((this->screen->format->BytesPerPixel%2) == 0) ) {
-		CGX_SwapAllPixels(this->screen);
-		USE_WPA(this->screen->pixels,0,0,this->screen->pitch,
-				SDL_RastPort,0/*SDL_Window->BorderLeft*/,0/*SDL_Window->BorderTop*/,
-				this->screen->w,this->screen->h,format);
+		/* Check for endian-swapped screen, swap if necessary */
+	if ( swap_pixels && ((this->screen->format->BytesPerPixel%2) == 1) ) {
+		swap_required = 1;
 		CGX_SwapAllPixels(this->screen);
 	}
-	else if (customroutine==2)
+	if (customroutine==2)
 	{
 #ifdef USE_CGX_WRITELUTPIXEL
 		WLUT(this->screen->pixels,0,0,this->screen->pitch,
@@ -1120,8 +1079,9 @@ void CGX_RefreshDisplay(_THIS)
 			BltBitMapRastPort(this->hidden->bmap,0,0,
 					SDL_RastPort,/*SDL_Window->BorderLeft+*/0,/*SDL_Window->BorderTop+*/0,
 					this->screen->w,this->screen->h,0xc0);
-			
-        return;
+			if (swap_required)
+				CGX_SwapAllPixels(this->screen);
+			return;
 		}
 		{
 			register int j;
@@ -1159,5 +1119,6 @@ void CGX_RefreshDisplay(_THIS)
 				SDL_RastPort,0 /*SDL_Window->BorderLeft*/,0/*SDL_Window->BorderTop*/,
 				this->screen->w,this->screen->h,format);
 	}
-
+	if (swap_required)
+		CGX_SwapAllPixels(this->screen);
 }
