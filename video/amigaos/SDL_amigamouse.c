@@ -148,10 +148,10 @@ void amiga_CheckMouseMode(_THIS)
 
 	/* Minimum IDCMP flags */
 
-	flags = IDCMP_ACTIVEWINDOW|IDCMP_INACTIVEWINDOW|IDCMP_MOUSEMOVE|IDCMP_RAWKEY|IDCMP_MOUSEBUTTONS;
+	flags = IDCMP_MOUSEMOVE|IDCMP_RAWKEY|IDCMP_MOUSEBUTTONS;
 
 	if (!currently_fullscreen)
-		flags |= IDCMP_NEWSIZE|IDCMP_CLOSEWINDOW;
+		flags |= IDCMP_ACTIVEWINDOW|IDCMP_INACTIVEWINDOW|IDCMP_NEWSIZE|IDCMP_CLOSEWINDOW;
 
 	/* If the mouse is hidden and input is grabbed, we use relative mode */
 

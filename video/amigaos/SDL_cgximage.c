@@ -581,7 +581,7 @@ static void CGX_NormalUpdate(_THIS, int numrects, SDL_Rect *rects)
 	}
 
 	/* Check for endian-swapped screen, swap if necessary (VERY slow!) */
-	if ( swap_pixels &&  ((this->screen->format->BytesPerPixel%2) == 0) ) {
+	if ( swap_pixels &&  ((this->screen->format->BytesPerPixel) == 1) ) {
 		swap_required = 1;	
 		CGX_SwapPixels(this->screen, numrects, rects);
 	}
@@ -936,7 +936,7 @@ void CGX_RefreshDisplay(_THIS)
 	}
 
 		/* Check for endian-swapped screen, swap if necessary */
-	if ( swap_pixels && ((this->screen->format->BytesPerPixel%2) == 1) ) {
+	if ( swap_pixels && ((this->screen->format->BytesPerPixel) == 1) ) {
 		swap_required = 1;
 		CGX_SwapAllPixels(this->screen);
 	}

@@ -27,8 +27,8 @@ GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wa
 	video/amigaos/SDL_cgxyuv.go video/amigaos/SDL_cgxaccel.go video/amigaos/SDL_cgxgl_wrapper.go \
 	video/SDL_gamma.go stdlib/SDL_stdlib.go stdlib/SDL_string.go stdlib/SDL_malloc.go stdlib/SDL_getenv.go
 
-VOBJS = video/amigaos/SDL_cgxwm_68k.o
-VOBJSELF = video/amigaos/SDL_cgxwm_68k.go
+VOBJS = video/amigaos/SDL_cgxwm_68k.o video/amigaos/SDL_amigaevents_68k.o
+VOBJSELF = video/amigaos/SDL_cgxwm_68k.go video/amigaos/SDL_amigaevents_68k.go
 
 %_68k.o: %_68k.c
 	$(VC) $(VCFLAGS) $(VCDEFINES) -c $*_68k.c -o $@
