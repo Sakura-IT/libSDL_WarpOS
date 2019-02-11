@@ -835,9 +835,9 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			{
 				/* Create GimmeZeroZero window when OpenGL is used */
 				unsigned long gzz = FALSE;
-//				if( flags & SDL_OPENGL ) {
-//					gzz = TRUE;
-//				}
+				if( (flags & SDL_OPENGL)  ||  (flags & SDL_HWSURFACE) ){
+					gzz = TRUE;
+				}
 
 				SDL_Window = OpenWindowTags(NULL,WA_InnerWidth,w,WA_InnerHeight,h,
 								WA_Flags,WFLG_REPORTMOUSE|WFLG_ACTIVATE|WFLG_RMBTRAP |
