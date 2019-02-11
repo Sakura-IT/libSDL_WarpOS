@@ -341,15 +341,9 @@ static int AHI_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	return(0);
 }
 
-#if 0
 AudioBootStrap AHI_bootstrap = {
 	"AHI",
 	"ahi.device SDL audio",
 	Audio_Available,
 	Audio_CreateDevice
 };
-#else
-AudioBootStrap AHI_bootstrap = {
-	"AHI", Audio_Available, Audio_CreateDevice
-};
-#endif
