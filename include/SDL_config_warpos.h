@@ -66,7 +66,6 @@
 #define HAVE_MEMSET 1
 #define HAVE_MEMCPY 1
 #define HAVE_MEMMOVE 1
-//#define SDL_revcpy memmove
 #define HAVE_MEMCMP 1
 #define HAVE_STRLEN 1
 
@@ -97,7 +96,9 @@
 #define HAVE_SNPRINTF 1
 #define HAVE_VSNPRINTF 1
 #define HAVE_SETJMP 1
-#define HAVE_CLOCK_GETTIME 1
+
+#undef HAVE_CLOCK_GETTIME
+#undef HAVE_SIGNAL_H
 
 /* Enable various audio drivers */
 #define SDL_AUDIO_DRIVER_AHI	1
