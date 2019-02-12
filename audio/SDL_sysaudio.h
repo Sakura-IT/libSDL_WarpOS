@@ -33,7 +33,7 @@ static char rcsid =
 #include "SDL_thread.h"
 
 #if defined(WARPOS)
-#pragma pack(2)
+#pragma pack(push,2)
 #endif
 
 #include <exec/exec.h>
@@ -44,11 +44,11 @@ static char rcsid =
 #include <inline/exec.h>
 #endif
 
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 #include <devices/ahi.h>
 #endif
 
-#pragma pack()
+#pragma pack(pop)
 
 #include "../mydebug.h"
 

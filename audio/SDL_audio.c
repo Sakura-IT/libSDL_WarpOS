@@ -83,7 +83,7 @@ static AudioBootStrap *bootstrap[] = {
 #ifdef _AIX
 	&Paud_bootstrap,
 #endif
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 	&AHI_bootstrap,
 #endif
 #ifdef MMEAUDIO_SUPPORT
@@ -113,7 +113,7 @@ SDL_AudioDevice *current_audio = NULL;
 int SDL_AudioInit(const char *driver_name);
 void SDL_AudioQuit(void);
 
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 static int audio_configured = 0;
 #endif
 
@@ -126,7 +126,7 @@ int SDL_RunAudio(void *audiop)
 	void  *udata;
 	void (*fill)(void *userdata,Uint8 *stream, int len);
 	int    silence;
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 	int started = 0;
 
 /* AmigaOS NEEDS that the audio driver is opened in the thread that uses it! */
@@ -152,7 +152,7 @@ int SDL_RunAudio(void *audiop)
 	fill  = audio->spec.callback;
 	udata = audio->spec.userdata;
 
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 	audio_configured = 1;
 
 	D(bug("Audio configured... Checking for conversion\n"));
@@ -173,7 +173,7 @@ int SDL_RunAudio(void *audiop)
 	}
 	stream = audio->fake_stream;
 
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 	
 	SDL_mutexV(audio->mixer_lock);
 	D(bug("Entering audio loop...\n"));
@@ -187,7 +187,7 @@ int SDL_RunAudio(void *audiop)
 		if ( stream == audio->fake_stream ) {
 			SDL_Delay((audio->spec.samples*1000)/audio->spec.freq);
 		} else {
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 			if ( started > 1 )
 #endif
 			audio->WaitAudio(audio);
@@ -228,7 +228,7 @@ int SDL_RunAudio(void *audiop)
 		/* Ready current buffer for play and change current buffer */
 		if ( stream != audio->fake_stream ) {
 			audio->PlayAudio(audio);
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 /* AmigaOS don't have to wait the first time audio is played! */
 			started++;
 #endif
@@ -240,7 +240,7 @@ int SDL_RunAudio(void *audiop)
 		audio->WaitDone(audio);
 	}
 
-#ifdef ENABLE_AHI
+#ifdef SDL_AUDIO_DRIVER_AHI
 	D(bug("WaitAudio...Done\n"));
 
 	audio->CloseAudio(audio);
@@ -517,7 +517,7 @@ if ( desired->samples == 0 ) {
 	audio->enabled = 1;
 	audio->paused  = 1;
  
-#ifndef ENABLE_AHI
+#ifndef SDL_AUDIO_DRIVER_AHI
 	D(bug("AHI OpenAudio\n"));
 /* AmigaOS opens audio inside the main loop */
 	audio->opened = audio->OpenAudio(audio, &audio->spec)+1;
@@ -592,7 +592,7 @@ if ( desired->samples == 0 ) {
 		}
 	}
 
-#ifndef ENABLE_AHI
+#ifndef SDL_AUDIO_DRIVER_AHI
 	/* Start the audio thread if necessary */
 	switch (audio->opened) {
 		case  1:
@@ -687,7 +687,7 @@ void SDL_AudioQuit(void)
 			SDL_FreeAudioMem(audio->convert.buf);
 
 		}
-#ifndef ENABLE_AHI
+#ifndef SDL_AUDIO_DRIVER_AHI
 		if ( audio->opened ) {
 			audio->CloseAudio(audio);
 			audio->opened = 0;
