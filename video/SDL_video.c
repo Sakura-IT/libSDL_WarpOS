@@ -601,6 +601,7 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 	#ifdef WARPUP
 	if (getenv("SDL_HWSURFACE"))flags |= SDL_HWSURFACE ;
 	if (getenv("SDL_SWSURFACE"))flags &= ~SDL_HWSURFACE ;
+	if (!(flags & SDL_HWSURFACE))flags &= ~SDL_DOUBLEBUF;
 	#endif
 
 	/* Start up the video driver, if necessary..
@@ -645,12 +646,14 @@ SDL_Surface * SDL_SetVideoMode (int width, int height, int bpp, Uint32 flags)
 		flags &= ~SDL_DOUBLEBUF;
 	}
 #endif
-#ifndef WARPUP								//HWSURFACE does not flicker on MOS. Enable this for testing.
+
+#ifndef WARPUP
 	if ( (flags&SDL_DOUBLEBUF) == SDL_DOUBLEBUF ) {
 		/* Use hardware surfaces when double-buffering */
 		flags |= SDL_HWSURFACE;
 	}
 #endif
+
 	is_opengl = ( ( flags & SDL_OPENGL ) == SDL_OPENGL );
 	if ( is_opengl ) {
 		/* These flags are for 2D video modes only */
