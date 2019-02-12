@@ -11,7 +11,7 @@ VCDEFINES = -DWARPOS -D__SIZE_T
 VCFLAGS = +aos68k -c99 -O2 -Igg:os-includeppc -Igg:os-includeppc/sdl
 
 CFLAGS = --specs=warpup -maltivec -I. -I../include -I./include/ -I./include/SDL -O2 -fomit-frame-pointer
-GCCDEFINES = -DNO_AMIGADEBUG -DHAVE_OPENGL -DUSE_MGLAPI -DSDL_VIDEO_OPENGL -DWARPOS -DENABLE_CYBERGRAPHICS -DSDL_ALTIVEC_COPY -DSDL_ALTIVEC_BLITTERS
+GCCDEFINES = -DNO_AMIGADEBUG -DHAVE_OPENGL -DUSE_MGLAPI -DSDL_VIDEO_OPENGL -DWARPOS -DSDL_ALTIVEC_COPY -DSDL_ALTIVEC_BLITTERS
 
 GOBJS = audio/SDL_audio.go audio/SDL_audiocvt.go audio/SDL_mixer.go audio/SDL_wave.go audio/amigaos/SDL_ahiaudio.go \
 	main/SDL_error.go main/SDL_fatal.go video/SDL_RLEaccel.go video/SDL_blit.go video/SDL_blit_0.go \
