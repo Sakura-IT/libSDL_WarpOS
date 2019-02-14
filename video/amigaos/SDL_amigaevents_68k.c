@@ -29,11 +29,57 @@ static char rcsid =
 #include <intuition/intuition.h>
 #include <exec/avl.h>
 #include <inline/exec_protos.h>
+#include <inline/lowlevel_protos.h>
 
-int GetMessages68k(__reg("a1") struct MsgPort *port, __reg("a0") struct MsgStruct *msg,	 __reg("d0") int maxmsg)
+#define JP_ANALOGUE_PORT_MAGIC (1<<16) /* port offset to force analogue readout */
+#define MAX_JOYSTICKS 4 /* lowlevel.library is limited to 4 ports */
+#define NO_LOWLEVEL_EXT
+
+struct JoyData {
+	int data_norm;
+#ifndef NO_LOWLEVEL_EXT
+	int data_ext;
+#endif
+};
+
+extern struct Library *LowLevelBase;
+
+/* lowlevel portNumber 0 <-> 1 */
+static int PortIndex68k(int index)
 {
- int i = 0;
+	switch(index)
+	{
+		case 0:
+			return 1;
+			break;
+
+		case 1:
+			return 0;
+			break;
+
+		default:
+			break;
+	}
+
+	return index;
+}
+
+int GetMessages68k(__reg("a1") struct MsgPort *port, __reg("a0") struct MsgStruct *msg,
+			 __reg("a2") struct JoyData *myjoydata, __reg("d0") int maxmsg)
+{
+ int z, i = 0;
  struct IntuiMessage *imsg;
+
+ if (LowLevelBase)
+ { 
+   for(z = 0; z < MAX_JOYSTICKS; z++)
+   {
+   myjoydata[z].data_norm = ReadJoyPort(PortIndex68k(z));
+#ifndef NO_LOWLEVEL_EXT
+   myjoydata[z].data_ext = ReadJoyPort(PortIndex68k(z) + JP_ANALOGUE_PORT_MAGIC);
+#endif
+   }
+ }
 
  while ((imsg = (struct IntuiMessage *)GetMsg(port))) {
    if (i < maxmsg) {
@@ -48,3 +94,4 @@ int GetMessages68k(__reg("a1") struct MsgPort *port, __reg("a0") struct MsgStruc
  }
  return i;
 }
+

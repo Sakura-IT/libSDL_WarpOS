@@ -83,6 +83,8 @@ static char rcsid =
 
 struct Library *LowLevelBase = NULL;
 
+struct JoyData *myjoydata;
+
 static const unsigned long joybut[] =
 {
 	JPF_BUTTON_RED,
@@ -248,6 +250,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 		}
 	}
 
+	myjoydata = SDL_malloc(sizeof(struct JoyData)*MAX_JOYSTICKS);
 	joystick->hwdata = (struct joystick_hwdata *) malloc(sizeof(*joystick->hwdata));
 
 	if ( joystick->hwdata == NULL )
@@ -307,7 +310,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
  */
 void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 {
-	ULONG data;
+	ULONG data = myjoydata[joystick->index].data_norm;
 #ifndef NO_LOWLEVEL_EXT
 	ULONG data_ext;
 #endif
@@ -325,10 +328,9 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 		}
 	}
 
-	data = ReadJoyPort(PortIndex(joystick->index));
 #ifndef NO_LOWLEVEL_EXT
 	if (joystick->hwdata->supports_analog)
-		data_ext = ReadJoyPort(PortIndex(joystick->index) + JP_ANALOGUE_PORT_MAGIC);
+		data_ext = myjoydata[joystick->index].data_ext;
 #endif
 
 	/* only send an event when something changed */
@@ -470,7 +472,10 @@ void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 	{
 		free(joystick->hwdata);
 	}
-
+	if(myjoydata)
+	{
+		free(myjoydata);
+	}
 	return;
 }
 

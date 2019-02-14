@@ -116,6 +116,9 @@ int SDL_InitSubSystem(Uint32 flags)
 
 #if !SDL_JOYSTICK_DISABLED
 	/* Initialize the joystick subsystem */
+	if (getenv("SDL_NOJOYSTICKS"))
+		return 0;				/* Returning -1 will end the program */
+
 	if ( (flags & SDL_INIT_JOYSTICK) &&
 	     !(SDL_initialized & SDL_INIT_JOYSTICK) ) {
 		if ( SDL_JoystickInit() < 0 ) {
@@ -132,6 +135,9 @@ int SDL_InitSubSystem(Uint32 flags)
 
 #if !SDL_CDROM_DISABLED
 	/* Initialize the CD-ROM subsystem */
+	if (getenv("SDL_NOCDROM"))
+		return 0;				/* Returning -1 will end the program */
+
 	if ( (flags & SDL_INIT_CDROM) && !(SDL_initialized & SDL_INIT_CDROM) ) {
 		if ( SDL_CDROMInit() < 0 ) {
 			return(-1);

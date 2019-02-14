@@ -21,6 +21,11 @@
 */
 #include "SDL_config.h"
 
+#ifdef SAVE_RCSID
+static char rcsid =
+ "@(#) $Id$";
+#endif
+
 /* This is the system specific header for the SDL joystick API */
 
 #include "SDL_joystick.h"
@@ -48,6 +53,13 @@ struct _SDL_Joystick {
 	struct joystick_hwdata *hwdata;	/* Driver dependent information */
 
 	int ref_count;		/* Reference count for multiple opens */
+};
+
+struct JoyData {
+	int data_norm;
+#ifndef NO_LOWLEVEL_EXT
+	int data_ext;
+#endif
 };
 
 /* Function to scan the system for joysticks.
