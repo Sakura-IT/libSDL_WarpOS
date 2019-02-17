@@ -21,6 +21,11 @@
 */
 #include "SDL_config.h"
 
+#ifdef SAVE_RCSID
+static char rcsid =
+ "@(#) $Id$";
+#endif
+
 /* CPU feature detection for SDL */
 
 #include "SDL.h"
@@ -33,7 +38,7 @@
 #include <setjmp.h>
 #endif
 
-#if defined(__MORPHOS__)
+#if defined(WARPUP)
 #include <stdlib.h>
 
 #pragma pack(2)
@@ -367,9 +372,15 @@ static __inline__ int CPU_haveSSE2(void)
 	return 0;
 }
 
+#ifdef WARPUP
+int altivec = -1;
+#endif
+
 static __inline__ int CPU_haveAltiVec(void)
 {
+#ifndef WARPUP
 	volatile int altivec = 0;
+#endif
 #if defined(__MACOSX__) && (defined(__ppc__) || defined(__ppc64__))
 	int selectors[2] = { CTL_HW, HW_VECTORUNIT }; 
 	int hasVectorUnit = 0; 
@@ -377,14 +388,18 @@ static __inline__ int CPU_haveAltiVec(void)
 	int error = sysctl(selectors, 2, &hasVectorUnit, &length, NULL, 0); 
 	if( 0 == error )
 		altivec = (hasVectorUnit != 0); 
-#elif defined(__MORPHOS__)
-	if (PowerPCBase->lib_Version >= 17)
+#elif defined(WARPUP)
+	if (altivec == -1);
 	{
-		struct TagItem cputags[2] = { {GETINFO_CPU, 0}, {TAG_END,0} };
-		GetInfo(cputags);
-		if (cputags[0].ti_Data & CPUF_G4)
+		altivec = 0;
+		if (PowerPCBase->lib_Version >= 17)
 		{
-			altivec = 1;
+			struct TagItem cputags[2] = { {GETINFO_CPU, 0}, {TAG_END,0} };
+			GetInfo(cputags);
+			if (cputags[0].ti_Data & CPUF_G4)
+			{
+				altivec = 1;
+			}
 		}
 	}
 #elif SDL_ALTIVEC_BLITTERS && HAVE_SETJMP
