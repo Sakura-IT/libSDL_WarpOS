@@ -372,14 +372,11 @@ static __inline__ int CPU_haveSSE2(void)
 	return 0;
 }
 
-#ifdef WARPUP
-int altivec = -1;
-#endif
 
 static __inline__ int CPU_haveAltiVec(void)
 {
 #ifndef WARPUP
-	volatile int altivec = 0;
+	volatile int altivec;
 #endif
 #if defined(__MACOSX__) && (defined(__ppc__) || defined(__ppc64__))
 	int selectors[2] = { CTL_HW, HW_VECTORUNIT }; 
@@ -389,17 +386,14 @@ static __inline__ int CPU_haveAltiVec(void)
 	if( 0 == error )
 		altivec = (hasVectorUnit != 0); 
 #elif defined(WARPUP)
-	if (altivec == -1);
+	int altivec = 0;
+	if (PowerPCBase->lib_Version >= 17)
 	{
-		altivec = 0;
-		if (PowerPCBase->lib_Version >= 17)
+		struct TagItem cputags[2] = { {GETINFO_CPU, 0}, {TAG_END,0} };
+		GetInfo(cputags);
+		if (cputags[0].ti_Data & CPUF_G4)
 		{
-			struct TagItem cputags[2] = { {GETINFO_CPU, 0}, {TAG_END,0} };
-			GetInfo(cputags);
-			if (cputags[0].ti_Data & CPUF_G4)
-			{
-				altivec = 1;
-			}
+			altivec = 1;
 		}
 	}
 #elif SDL_ALTIVEC_BLITTERS && HAVE_SETJMP
