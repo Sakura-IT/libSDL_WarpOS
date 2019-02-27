@@ -533,9 +533,9 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 	audio->enabled = 1;
 	audio->paused  = 1;
 
-//#if defined(__MORPHOS__)
-//	has_obtained_spec = obtained ? 1 : 0;
-//#endif
+#ifdef WARPUP
+	has_obtained_spec = obtained ? 1 : 0;
+#endif
 #ifndef SDL_AUDIO_DRIVER_AHI
 
 	audio->opened = audio->OpenAudio(audio, &audio->spec)+1;
