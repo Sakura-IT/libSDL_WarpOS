@@ -251,7 +251,8 @@ static int AHI_OpenAudio(_THIS, SDL_AudioSpec *spec)
 	 * Recommended testing: E-UAE, Bolcatoid
 	 */
 #ifdef WARPUP
-	spec->samples = 2048;
+	if (spec->samples < 1024)
+		spec->samples = 1024;
 #else
 	if (has_obtained_spec && spec->samples > 1024)
 	{
