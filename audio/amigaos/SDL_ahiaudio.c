@@ -69,10 +69,31 @@ void AHI_Mute(ULONG mute)
 
 static int Audio_Available(void)
 {
-	/* AHI always available */
+	int ok=0;
+	struct MsgPort *p;
+	struct AHIRequest *req;
 
-	return 1;
+	if(p=CreateMsgPort())
+	{
+		if(req=(struct AHIRequest *)CreateIORequest(p,sizeof(struct AHIRequest)))
+		{
+			req->ahir_Version=4;
+
+			if(!OpenDevice(AHINAME,0,(struct IORequest *)req,NULL))
+			{
+				D(bug("AHI available.\n"));
+				ok=1;
+				CloseDevice((struct IORequest *)req);
+			}
+			DeleteIORequest((struct IORequest *)req);
+		}
+		DeleteMsgPort(p);
+	}
+
+	D(if(!ok) bug("AHI not available\n"));
+	return ok;
 }
+
 
 void static AHI_WaitAudio(_THIS)
 {
