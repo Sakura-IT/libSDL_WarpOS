@@ -96,9 +96,7 @@ static SDL_AudioDevice *Audio_CreateDevice(int devindex)
 {
 	SDL_AudioDevice *this;
 
-#ifndef NO_AMIGADEBUG
 	D(bug("AHI created...\n"));
-#endif
 
 	/* Initialize all variables that we clean on shutdown */
 	this = (SDL_AudioDevice *)malloc(sizeof(SDL_AudioDevice));
