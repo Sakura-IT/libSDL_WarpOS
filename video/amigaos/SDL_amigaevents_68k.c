@@ -70,7 +70,7 @@ int GetMessages68k(__reg("a1") struct MsgPort *port, __reg("a0") struct MsgStruc
  int z, i = 0;
  struct IntuiMessage *imsg;
 
- if (LowLevelBase)
+ if ((LowLevelBase) && (myjoydata))
  { 
    for(z = 0; z < MAX_JOYSTICKS; z++)
    {

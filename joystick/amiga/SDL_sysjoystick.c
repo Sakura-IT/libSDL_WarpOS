@@ -83,7 +83,7 @@ static char rcsid =
 
 struct Library *LowLevelBase = NULL;
 
-struct JoyData *myjoydata;
+struct JoyData *myjoydata = NULL;
 
 static const unsigned long joybut[] =
 {
