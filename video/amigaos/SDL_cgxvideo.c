@@ -712,6 +712,7 @@ struct Library *findlib(char *name)
 	return(lib);
 }
 
+	asm(".long 0,0");	//FIXME: dirty code padding - in case of Altivec.
 
 int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			    int w, int h, int bpp, Uint32 flags)
@@ -853,7 +854,7 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 		if(!SDL_Window)
 			return -1;
 	}
-	this->hidden->swap_bytes = 1; 
+	this->hidden->swap_bytes = swap_pixels = 1; 
 	if ((flags & SDL_OPENGL) == 0)
 	{ 
 		switch(GetCyberMapAttr(SDL_Window->RPort->BitMap, CYBRMATTR_PIXFMT))
@@ -873,12 +874,9 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 
 	if(!findlib("CVisionPPC") && !findlib("BVisionPPC"))
 	{
-		this->hidden->swap_bytes = 1-this->hidden->swap_bytes;
+		this->hidden->swap_bytes ^= 1;
+		swap_pixels = 0;				//Need to byte swap 8 bit screens on Permedia 2
 	} 
-	else
-	{
-		swap_pixels = 1;			//Need to byte swap 8 bit screens on Permedia 2
-	}
 				
 	this->hidden->BytesPerPixel=GetCyberMapAttr(SDL_Window->RPort->BitMap,CYBRMATTR_BPPIX);
 
