@@ -139,11 +139,13 @@ int CGX_SetupImage(_THIS, SDL_Surface *screen)
 		screen->hwdata->videodata=this;
 	//if ((!screen->flags&SDL_FULLSCREEN))
 	{    
+#if 0		//not needed for RTG?
 		if (AvailMem(MEMF_LARGEST) < (screen->w * screen->h * (this->hidden->depth /8) + 500000))
 		{
 		D(bug("not enough RAM for other bitmap \n"));
 		return -1;
 		}
+#endif
 		if (!(this->hidden->bmap=AllocBitMap(screen->w,screen->h,this->hidden->depth,format,friendbmap)))
 		   {
 			format &= ~BMF_DISPLAYABLE;	

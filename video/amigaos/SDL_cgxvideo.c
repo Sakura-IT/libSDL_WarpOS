@@ -712,7 +712,7 @@ struct Library *findlib(char *name)
 	return(lib);
 }
 
-	asm(".long 0,0");	//FIXME: dirty code padding - in case of Altivec.
+	asm(".long 0");	//FIXME: dirty code padding - in case of Altivec.
 
 int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			    int w, int h, int bpp, Uint32 flags)
