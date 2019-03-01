@@ -40,12 +40,12 @@ VOBJSELF = video/amigaos/SDL_cgxwm_68k.go video/amigaos/SDL_amigaevents_68k.go
 %.ll: %.s
 	$(AS) -o $@ $*.s
 
-all: libSDL_wos.a
+all: libSDL.a
 
-libSDL_wos.a: $(GOBJS) $(VOBJS)
-	-rm -f libSDL_wos.a
-	ar cru libSDL_wos.a $(GOBJS) $(VOBJSELF)
-	$(RL) libSDL_wos.a
+libSDL.a: $(GOBJS) $(VOBJS)
+	-rm -f libSDL.a
+	ar cru libSDL.a $(GOBJS) $(VOBJSELF)
+	$(RL) libSDL.a
 
 clean:
 	-rm -f $(GOBJS) $(VOBJS) $(VOBJSELF)
