@@ -26,7 +26,7 @@ static char rcsid =
 #endif
 
 /* Utilities for getting and setting the X display mode */
-#include <SDL/SDL_config.h>
+#include "SDL_config.h"
 #include "SDL_cgxvideo.h"
 #include "SDL_cgxvideo.h"
 

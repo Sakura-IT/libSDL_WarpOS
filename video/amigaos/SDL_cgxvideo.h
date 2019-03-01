@@ -20,6 +20,8 @@
     slouken@libsdl.org
 */
 
+#include "SDL_config.h"
+
 #ifdef SAVE_RCSID
 static char rcsid =
  "@(#) $Id$";
@@ -28,7 +30,6 @@ static char rcsid =
 #ifndef _SDL_cgxvideo_h
 #define _SDL_cgxvideo_h
 
-#include <SDL/SDL_config.h>
 #include <stdio.h>
 #ifndef AROS
 #include <stdlib.h>
