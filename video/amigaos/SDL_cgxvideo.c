@@ -834,9 +834,9 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			}
 			else
 			{
-				/* Create GimmeZeroZero window when OpenGL is used */
+				/* Create GimmeZeroZero window when HWSURFACE is used */
 				unsigned long gzz = FALSE;
-				if( (flags & SDL_OPENGL)  ||  (flags & SDL_HWSURFACE) ){
+				if( flags & SDL_HWSURFACE ){
 					gzz = TRUE;
 				}
 
