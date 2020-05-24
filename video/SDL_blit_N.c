@@ -553,7 +553,7 @@ static void Blit32to32KeyAltivec(SDL_BlitInfo *info)
     int copy_alpha = (srcfmt->Amask && dstfmt->Amask);
 	unsigned alpha = dstfmt->Amask ? srcfmt->alpha : 0;
     Uint32 rgbmask = srcfmt->Rmask | srcfmt->Gmask | srcfmt->Bmask;
-	Uint32 ckey = info->src->colorkey;
+    	Uint32 ckey = info->src->colorkey;
     vector unsigned int valpha;
     vector unsigned char vpermute;
     vector unsigned char vzero;
@@ -2407,9 +2407,11 @@ SDL_loblit SDL_CalculateBlitN(SDL_Surface *surface, int blit_index)
 		return BlitNto1Key;
 	    else {
 #if SDL_ALTIVEC_BLITTERS
+#ifndef WARPUP
         if((surface->pitch >= 16) && (srcfmt->BytesPerPixel == 4) && (dstfmt->BytesPerPixel == 4) && SDL_HasAltiVec()) {
             return Blit32to32KeyAltivec;
         } else
+#endif
 #endif
 
 		if(srcfmt->Amask && dstfmt->Amask)
