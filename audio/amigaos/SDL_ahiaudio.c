@@ -37,6 +37,7 @@ static char rcsid =
 #pragma pack(push,2)
 #include <exec/execbase.h>
 #include <proto/exec.h>
+#include <powerpc/powerpc.h>
 #include <powerpc/powerpc_protos.h>
 #undef NEWLIST
 #define NEWLIST NewListPPC
@@ -95,6 +96,19 @@ static int Audio_Available(void)
 }
 
 
+static void Sys_Wait68k(struct AHIRequest *req, struct MsgPort *msg){
+     extern void Wait68k();
+     struct PPCArgs args;
+     args.PP_Code = (APTR)Wait68k;
+     args.PP_Offset = 0;
+     args.PP_Flags = 0;
+     args.PP_Stack = NULL;
+     args.PP_StackSize = 0;
+     args.PP_Regs[PPREG_A0] = (ULONG)req;
+     args.PP_Regs[PPREG_A1] = (ULONG)msg;
+     Run68K(&args);
+}
+
 void static AHI_WaitAudio(_THIS)
 {
 	struct AHIRequest *req;
@@ -105,11 +119,20 @@ void static AHI_WaitAudio(_THIS)
 
 	if (req->ahir_Std.io_Data)
 	{
+		#if 0
+
 		WaitIO((struct IORequest *)req);
 		req->ahir_Std.io_Data = NULL;
 
 		GetMsg(&this->hidden->thread_audio_mp);
 		GetMsg(&this->hidden->thread_audio_mp);
+
+		#else
+
+		Sys_Wait68k(req, &this->hidden->thread_audio_mp);
+		req->ahir_Std.io_Data = NULL;
+
+		#endif
 	}
 }
 
