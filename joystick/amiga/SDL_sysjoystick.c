@@ -475,6 +475,7 @@ void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 	if(myjoydata)
 	{
 		free(myjoydata);
+		myjoydata = NULL;
 	}
 	return;
 }
