@@ -64,6 +64,12 @@ extern DECLSPEC SDL_mutex * SDLCALL SDL_CreateMutex(void);
  */
 extern DECLSPEC int SDLCALL SDL_mutexP(SDL_mutex *mutex);
 
+#define SDL_TryLockMutex(m)	SDL_mutexT(m)
+/** Try to lock the mutex
+ *  @return 0, SDL_MUTEX_TIMEDOUT, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_mutexT(SDL_mutex *mutex);
+
 #define SDL_UnlockMutex(m)	SDL_mutexV(m)
 /** Unlock the mutex
  *  @return 0, or -1 on error
