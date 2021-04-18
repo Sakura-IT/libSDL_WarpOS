@@ -39,6 +39,7 @@ struct MsgStruct {
   ULONG Class;
   UWORD Code;
   UWORD Qualifier;
+  UWORD Rawkey;
   WORD MouseX;
   WORD MouseY;
 };

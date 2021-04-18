@@ -51,7 +51,7 @@ extern struct JoyData *myjoydata;
 
 /* The translation tables from an Amiga keysym to a SDL keysym */
 static SDLKey MISC_keymap[256];
-SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym);
+SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym, int rawkey);
 struct IOStdReq *ConReq=NULL;
 struct MsgPort *ConPort=NULL;
 
@@ -73,6 +73,7 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 	int class = event.Class;
 	int code = event.Code;
 	int qualifier = event.Qualifier;
+	int rawkey = event.Rawkey;
 	int mousex = event.MouseX;
 	int mousey = event.MouseY;
 	int posted;
@@ -144,7 +145,7 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 		   
 	    case IDCMP_RAWKEY:
 
-		    /* Key press? */
+		    	/* Key press? */
 			if ((qualifier && IEQUALIFIER_LALT) && (qualifier && IEQUALIFIER_CONTROL) && (code == 0x25))
 			{
 				extern int skipframe,toggle;
@@ -155,6 +156,7 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
                  			{skipframe = 0; toggle=0;}
 				
 			}
+
 			switch (code)
 			{
 				case 0x200	:
@@ -163,24 +165,28 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 					return(posted);
 
 				}
+
 				case 0x201	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_LEFT, 0, 0);
 					return(posted);
 
 				}
+
 				case 0x202	:
 				{
 					SDL_PrivateMouseButton(SDL_PRESSED, SDL_BUTTON_RIGHT, 0, 0);
 					return(posted);
 
 				}
+
 				case 0x203	:
 				{
 					SDL_PrivateMouseButton(SDL_RELEASED, SDL_BUTTON_RIGHT, 0, 0);
 					return(posted);
 
 				}
+
 				case 0x7a	:
 				case 0x7b	:
 				{
@@ -197,57 +203,68 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 					}
 					break;
 				}
+
+			#if 0
                 	}
+
              		if( !(code&IECODE_UP_PREFIX) )
 		    	{
 				SDL_keysym keysym;
-				posted = SDL_PrivateKeyboard(SDL_PRESSED,
-				amiga_TranslateKey(code, qualifier, &keysym));
+				posted = SDL_PrivateKeyboard(SDL_PRESSED, amiga_TranslateKey(code, qualifier, &keysym, rawkey));
 		    	}
+
 		    	else
 		    	{
-	    		/* Key release? */
+	    			/* Key release? */
 
 				SDL_keysym keysym;
-				code&=~IECODE_UP_PREFIX;
+				code &= ~IECODE_UP_PREFIX;
 
-			/* Check to see if this is a repeated key */
-/*				if ( ! X11_KeyRepeat(SDL_Display, &xevent) )  */
+				/* Check to see if this is a repeated key */
+				/*  if ( ! X11_KeyRepeat(SDL_Display, &xevent) )  */
 
-				posted = SDL_PrivateKeyboard(SDL_RELEASED,
-				amiga_TranslateKey(code, qualifier, &keysym));
-					
+				posted = SDL_PrivateKeyboard(SDL_RELEASED, amiga_TranslateKey(code, qualifier, &keysym, rawkey));
+				
+				//
 				if (SDL_TranslateUNICODE)  // fix when press a key and release qualifier before key.key is repeat endless without that fix
 				{
 					posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code,IEQUALIFIER_RSHIFT, &keysym));	
+						amiga_TranslateKey(code,IEQUALIFIER_RSHIFT, &keysym, rawkey));	
 					posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code,IEQUALIFIER_RALT, &keysym));
+						amiga_TranslateKey(code,IEQUALIFIER_RALT, &keysym, rawkey));
               				posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code,IEQUALIFIER_CONTROL, &keysym));
+						amiga_TranslateKey(code,IEQUALIFIER_CONTROL, &keysym, rawkey));
 					posted = SDL_PrivateKeyboard(SDL_RELEASED,
-					amiga_TranslateKey(code, 0, &keysym));
-         			}	
+						amiga_TranslateKey(code, 0, &keysym, rawkey));
+         			}
+				//
 		    	}
 		    	break;
-   // code from powersdl (not work when press a key and release qualifier before key.key is repeat endless
 
+			#else
 
+   				// code from powersdl (not work when press a key and release qualifier before key.key is repeat endless (??)
 
+				default:
+				{
+					SDL_keysym keysym;
 
-//					{				{
-//						SDL_keysym keysym;
-//						amiga_TranslateKey(code & ~IECODE_UP_PREFIX, qualifier, &keysym);
-//
-//						if (code > 0x7f || !this->hidden->oldkey || this->hidden->oldkey != keysym.sym)
-//						{
-//							this->hidden->oldkey = code > 0x7f ? 0 : keysym.sym;
-//							SDL_PrivateKeyboard(code > 0x7f ? SDL_RELEASED : SDL_PRESSED, &keysym);
-//						}
-//						this->hidden->oldqual = qualifier;
-//					}
+					amiga_TranslateKey(code & ~IECODE_UP_PREFIX, qualifier, &keysym, rawkey);
+
+					if (code > 0x7f || !this->hidden->oldkey || this->hidden->oldkey != keysym.sym)
+					{
+						this->hidden->oldkey = code > 0x7f ? 0 : keysym.sym;
+						SDL_PrivateKeyboard(code > 0x7f ? SDL_RELEASED : SDL_PRESSED, &keysym);
+					}
+
+					this->hidden->oldqual = qualifier;
+				}
 				
+				break;
+			}
 			break;
+
+			#endif
 
 	    /* Have we been resized? */
 	    case IDCMP_NEWSIZE:
@@ -277,11 +294,9 @@ static int amiga_DispatchEvent(_THIS, struct MsgStruct event)
 	return(posted);
 }
 
-int Sys_GetEvents(void *port,void *msgarray,int arraysize)
-{
+int Sys_GetEvents(void *port, void *msgarray, int arraysize){
      extern int GetMessages68k();
      struct PPCArgs args;
-
      args.PP_Code = (APTR)GetMessages68k;
      args.PP_Offset = 0;
      args.PP_Flags = 0;
@@ -290,12 +305,12 @@ int Sys_GetEvents(void *port,void *msgarray,int arraysize)
      args.PP_Regs[PPREG_A0] = (ULONG)msgarray;
      args.PP_Regs[PPREG_A1] = (ULONG)port;
      args.PP_Regs[PPREG_A2] = (ULONG)myjoydata;
-     args.PP_Regs[PPREG_D0] = arraysize;
+     args.PP_Regs[PPREG_A3] = (ULONG)SDL_TranslateUNICODE;
 
+     args.PP_Regs[PPREG_D0] = arraysize;
      Run68K(&args);
      return args.PP_Regs[PPREG_D0];
 }
-
 void amiga_PumpEvents(_THIS)
 {
 	int i;
@@ -310,6 +325,8 @@ void amiga_PumpEvents(_THIS)
 		amiga_DispatchEvent(this, events[i]);
 	}
 }
+
+struct Library *KeymapBase;
 
 void amiga_InitOSKeymap(_THIS)
 {
@@ -381,10 +398,14 @@ void amiga_InitOSKeymap(_THIS)
 	MISC_keymap[101] = SDLK_RALT;
 	MISC_keymap[102] = SDLK_LSUPER; /* Left "Windows" */
 	MISC_keymap[103] = SDLK_RSUPER; /* Right "Windows */
+
+	if(!KeymapBase)
+	{
+		KeymapBase=OpenLibrary("keymap.library", 0L);
+	}
 }
 
-struct Library *KeymapBase;
-SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym)
+SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym, int rawkey)
 {
 	ULONG key, unicode;
 	WORD actual = -1;
@@ -393,11 +414,7 @@ SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym)
 	D(bug("[SDL] amiga_TranslateKey()\n"));
 
 	/* Get the raw keyboard scancode */
-   
-		if(!KeymapBase)
-		{
-			KeymapBase=OpenLibrary("keymap.library", 0L);
-		}
+
 	keysym->scancode = code;
 	keysym->sym = MISC_keymap[code];
 	key = 0;
@@ -405,16 +422,18 @@ SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym)
 	/* Get the translated SDL virtual keysym */
 	if (keysym->sym == SDLK_UNKNOWN)
 	{
-		struct InputEvent	ie;
+		#if 0
+
+		struct InputEvent ie;
 		UBYTE	buffer[4];
         
 		//qual &= ~(IEQUALIFIER_CONTROL|IEQUALIFIER_LALT|IEQUALIFIER_RALT);
         
-		ie.ie_Class				= IECLASS_RAWKEY;
-		ie.ie_SubClass			= 0;
-		ie.ie_Code				= code;
-		ie.ie_Qualifier		  = SDL_TranslateUNICODE ? qual : qual & ~(IEQUALIFIER_LSHIFT|IEQUALIFIER_RSHIFT|IEQUALIFIER_CAPSLOCK | IEQUALIFIER_CONTROL|IEQUALIFIER_LALT|IEQUALIFIER_RALT);
-		//ie.ie_Qualifier		= qual;// & ~(IEQUALIFIER_LSHIFT|IEQUALIFIER_RSHIFT|IEQUALIFIER_CAPSLOCK);
+		ie.ie_Class		= IECLASS_RAWKEY;
+		ie.ie_SubClass		= 0;
+		ie.ie_Code		= code;
+		ie.ie_Qualifier		= SDL_TranslateUNICODE ? qual : qual & ~(IEQUALIFIER_LSHIFT|IEQUALIFIER_RSHIFT|IEQUALIFIER_CAPSLOCK | IEQUALIFIER_CONTROL|IEQUALIFIER_LALT|IEQUALIFIER_RALT);
+		//ie.ie_Qualifier	= qual;// & ~(IEQUALIFIER_LSHIFT|IEQUALIFIER_RSHIFT|IEQUALIFIER_CAPSLOCK);
 		ie.ie_EventAddress	= NULL;
        
 		actual = MapRawKey(&ie, buffer, 4, NULL);
@@ -424,9 +443,19 @@ SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym)
 			key = *buffer;
 			keysym->sym = *buffer;
 		}
+
+		#else // Cowcat
+
+		if (rawkey)
+		{
+			key = rawkey;
+			keysym->sym = rawkey;
+		}
+
+		#endif
 	}
 
-	mod	= KMOD_NONE;
+	mod = KMOD_NONE;
 
 	if (qual & IEQUALIFIER_LSHIFT)
 		mod |= KMOD_LSHIFT;
@@ -455,6 +484,7 @@ SDL_keysym *amiga_TranslateKey(int code, int qual, SDL_keysym *keysym)
 	if (SDL_TranslateUNICODE) 
 	{
 		unicode = keysym->sym;
+
 		if (unicode > 255)
 			unicode = 0;
 	}
