@@ -712,8 +712,6 @@ struct Library *findlib(char *name)
 	return(lib);
 }
 
-	asm(".long 0");	//FIXME: dirty code padding - in case of Altivec.
-
 int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 			    int w, int h, int bpp, Uint32 flags)
 {
@@ -872,7 +870,7 @@ int CGX_CreateWindow(_THIS, SDL_Surface *screen,
 		}
 	} 
 
-	if(!findlib("CVisionPPC") && !findlib("BVisionPPC"))
+	if(!findlib("CVisionPPC") && !findlib("BVisionPPC") && !findlib("3DLabsPermedia2.chip"))
 	{
 		this->hidden->swap_bytes ^= 1;
 		swap_pixels = 0;				//Need to byte swap 8 bit screens on Permedia 2
