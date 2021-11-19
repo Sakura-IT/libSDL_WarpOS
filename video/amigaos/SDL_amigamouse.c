@@ -156,18 +156,21 @@ void amiga_CheckMouseMode(_THIS)
 	/* If the mouse is hidden and input is grabbed, we use relative mode */
 
 	SDL_Lock_EventThread();
+	
 	if ( !(SDL_cursorstate & CURSOR_VISIBLE) && (this->input_grab != SDL_GRAB_OFF) )
 	{
 		D(bug("relative mouse move\n"));
 		mouse_relative = 1;
-		ModifyIDCMP(SDL_Window, flags|IDCMP_DELTAMOVE);
+		if (SDL_Window)
+		        ModifyIDCMP(SDL_Window, flags|IDCMP_DELTAMOVE);
 	}
 	else
 	{
 		/* non-relative mode */
 		D(bug("mouse in non-relative mode\n"));
 		mouse_relative = 0;
-		ModifyIDCMP(SDL_Window, flags);
+		if (SDL_Window)
+		        ModifyIDCMP(SDL_Window, flags);
 	}
 	SDL_Unlock_EventThread();
 }
